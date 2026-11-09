@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="selection_service_label">SnipDo 屏幕选词</string>
+    <string name="selection_service_description">让你在屏幕上任意位置选词并翻译。只有在点按“屏幕选词”磁贴时才会截屏；它无法读取其他应用的内容，截图只保存在手机内存中。</string>
+    <string name="tile_select_on_screen">屏幕选词</string>
+    <string name="tile_translate_clipboard">翻译剪贴板</string>
+    <string name="action_open_in_app">在应用中打开</string>
+    <string name="action_close">关闭</string>
+    <string name="action_camera">相机</string>
+    <string name="action_photo">照片</string>
+    <string name="photo_unreadable">无法打开这张图片。</string>
+    <string name="label_from_image">来自图片</string>
+    <string name="tool_read_with_ai">用视觉模型读取整张图片</string>
+
+    <string name="pen_text">文字笔</string>
+    <string name="pen_plus">加选笔。再点一次可调整笔宽。</string>
+    <string name="pen_minus">减选笔。再点一次可调整笔宽。</string>
+    <string name="pen_lasso">套索</string>
+    <string name="pen_paragraph">段落笔</string>
+    <string name="pen_area">区域笔：用视觉模型读取选定区域</string>
+    <string name="tool_move">移动工具栏</string>
+    <string name="tool_undo">撤销</string>
+    <string name="tool_redo">重做</string>
+    <string name="tool_all">全选</string>
+    <string name="tool_all_short">全选</string>
+    <string name="tool_clear">清除选择</string>
+    <string name="tool_script">识别语言</string>
+    <string name="tool_collapse">收起工具栏</string>
+    <string name="order_reading">词序：阅读顺序</string>
+    <string name="order_selection">词序：选择顺序</string>
+
+    <string name="selection_capture_failed">无法截取屏幕。</string>
+    <string name="selection_scan_failed">文字识别失败。区域笔仍可读取选定区域。</string>
+    <string name="selection_blocked">此应用不允许截取其屏幕。</string>
+    <string name="selection_no_text">未找到文字。识别不了的内容可以试试区域笔。</string>
+    <string name="selection_reading_image">正在读取选定区域…</string>
+    <string name="error_ocr_unsupported">%1$s 不支持图片 OCR</string>
+    <string name="error_no_text_found">图片中未找到文字。</string>
+    <string name="label_original">原文</string>
+
+    <string name="action_translate">翻译</string>
+    <string name="action_translating">翻译中…</string>
+    <string name="action_looking_up">查询中…</string>
+    <string name="action_stop">停止</string>
+    <string name="action_copy">复制</string>
+    <string name="action_copied">已复制</string>
+    <string name="action_clear">清空</string>
+    <string name="action_try_again">重试</string>
+    <string name="action_save">保存</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_back">返回</string>
+    <string name="action_open_settings">打开设置</string>
+
+    <string name="title_history">历史</string>
+    <string name="title_settings">设置</string>
+    <string name="input_label">要翻译的文字</string>
+    <string name="mode_dictionary">查词</string>
+    <string name="language_auto">自动</string>
+    <string name="language_default">默认</string>
+    <string name="language_to">到</string>
+
+    <string name="label_auto_translation">自动翻译</string>
+    <string name="label_chinese_translation">中文译文</string>
+    <string name="label_english_translation">英文译文</string>
+    <string name="label_language_translation">%1$s译文</string>
+    <string name="label_dictionary">词典</string>
+    <string name="label_back_translation">回译 · %1$s</string>
+    <string name="back_translate">回译</string>
+
+    <string name="note_stopped">已停止</string>
+    <string name="error_no_key">未设置 API Key，翻译已取消。</string>
+    <string name="error_no_model">请在设置中获取并选择模型，或输入模型 ID。</string>
+    <string name="error_translation">翻译失败：%1$s</string>
+    <string name="back_running">正在回译…</string>
+    <string name="back_stopped">[回译已停止]</string>
+    <string name="back_no_key">[未设置 API Key，无法回译]</string>
+    <string name="back_error">[回译出错：%1$s]</string>
+    <string name="back_same_language">原文和译文是同一种语言，无需回译。</string>
+
+    <string name="history_empty">暂无历史</string>
+    <string name="history_clear">清空历史</string>
+
+    <string name="settings_language">界面语言</string>
+    <string name="settings_selection">屏幕选词</string>
+    <string name="settings_selection_on">已开启。在快捷设置中点按“屏幕选词”磁贴即可使用。</string>
+    <string name="settings_selection_off">未开启，需要进行一次设置：</string>
+    <string name="settings_selection_steps">1. 打开无障碍设置，开启“SnipDo 屏幕选词”。\n2. 如果系统提示这是受限设置，请打开应用信息，点按 ⋮ 菜单，选择“允许受限设置”，然后重试第 1 步。\n3. 把“屏幕选词”磁贴添加到快捷设置。</string>
+    <string name="settings_selection_privacy">它只会在你点按磁贴时截屏，无法读取其他应用的内容。截图只保存在手机内存中。在你确认之前不会发送任何内容，确认后也只发送你选中的文字。</string>
+    <string name="settings_selection_unsupported">屏幕选词需要 Android 12 或更高版本。</string>
+    <string name="settings_open_accessibility">无障碍设置</string>
+    <string name="settings_open_app_info">应用信息</string>
+    <string name="settings_add_select_tile">添加“屏幕选词”磁贴</string>
+    <string name="settings_add_clipboard_tile">添加“翻译剪贴板”磁贴</string>
+    <string name="settings_translation">翻译</string>
+    <string name="settings_back_translation">译文完成后自动回译</string>
+    <string name="settings_api">API</string>
+    <string name="settings_api_hint">所有接口均使用 OpenAI Chat Completions 兼容格式；API Key 按接口分别加密保存在这台手机上。</string>
+    <string name="settings_provider">接口</string>
+    <string name="settings_base_url">服务地址</string>
+    <string name="settings_api_key">API Key</string>
+    <string name="settings_model">模型</string>
+    <string name="settings_fetch_models">获取模型</string>
+    <string name="settings_fetching">获取中…</string>
+    <string name="settings_search_models">搜索模型</string>
+    <string name="settings_vision">支持图片 OCR</string>
+    <string name="settings_disable_thinking">关闭思考</string>
+    <string name="settings_saved">已保存</string>
+    <string name="settings_invalid_config">%1$s：请填写有效的 HTTPS 服务地址和模型 ID。服务地址不能包含密钥、查询参数或片段。</string>
+    <string name="settings_invalid_key">%1$s：这个 API Key 无法使用。</string>
+    <string name="settings_key_not_saved">API Key 无法保存到这台手机。</string>
+    <string name="settings_need_key_for_models">请先输入 API Key。</string>
+
+    <string name="settings_about">关于</string>
+    <string name="about_version">版本 %1$s</string>
+    <string name="about_check">检查更新</string>
+    <string name="about_checking">正在检查…</string>
+    <string name="about_up_to_date">已是最新版本。</string>
+    <string name="about_available">有新版本：%1$s</string>
+    <string name="about_download">查看并下载</string>
+    <string name="about_check_failed">检查更新失败：%1$s</string>
+    <string name="settings_update_badge">设置 ⬇</string>
+</resources>

@@ -1,0 +1,1430 @@
+{
+ "prompts": {
+  "dictionary": "\n你是一个专业的多语言词典助手。请根据用户选择的语言设置，对下面的单词或短语进行释义和对应表达整理。\n\n语言设置：\n1. 原文语言：SOURCE。如果是 Auto，请先自动识别原文语言。\n2. 释义/对应表达语言：TARGET。如果是 默认，请按“中文词语优先给英文对应表达；非中文词语优先用简体中文释义”的默认中英查词习惯处理。\n\n必须输出结构清晰、可直接渲染的 Markdown，并严格使用下面的层级和顺序：\n\n# {待查词条}\n\n> **语言**：{原文语言}\n>\n> **读音**：{常见读音、音标或罗马化；确实不适用时写“不适用”}\n\n## 对应表达\n1. **{表达一}** — {简短说明}\n2. **{表达二}** — {简短说明；没有第二项时省略}\n\n## 释义\n- **{词性或义项一}**：{解释}\n- **{词性或义项二}**：{解释；没有第二项时省略}\n\n## 用法\n- **常见搭配**：{常见搭配或固定用法}\n- **语气与场景**：{语气、正式程度和使用场景}\n\n## 例句\n1. {原文例句}\n   - **译文**：{目标语言译文}\n2. {第二个原文例句；没有时整项省略}\n   - **译文**：{目标语言译文}\n\n要求：\n- 一级标题只写待查词条；固定使用“对应表达、释义、用法、例句”四个二级标题，不得改成普通段落或连续编号\n- 语言和读音必须放在标题后的引用块中；释义、用法必须使用列表；例句必须使用有序列表并把译文缩进到对应例句下\n- 对应表达给出 1-3 项，例句给出 1-2 项；优先选择真实自然、常见的表达\n- 如果是偏抽象概念，可给出意译而不是生硬直译\n- 不要使用 Markdown 表格、代码块或额外的开场白、总结；直接从一级标题开始输出\n\n待查内容：\nTEXT\n",
+  "auto": "\n你是一个专业的多语言翻译引擎。请根据用户选择的语言设置翻译下方文本。\n\n语言设置：\n1. 原文语言：SOURCE。\n2. 目标语言：TARGET。\n\n规则：\n1. 追求信达雅：根据目标语言的表达习惯自由调整句式、段落和语序，确保译文流畅、自然、专业。\n2. 直接输出译文，不要说明识别到的语言，不要添加前缀或解释。\n\n待翻译文本：\nTEXT\n",
+  "toEnglish": "\n你是一个专业的多语言翻译引擎。请将下方文本翻译成地道的英文。\n\n规则：\n1. 追求信达雅：根据英文母语者的表达习惯自由调整句式、段落和语序，确保译文流畅、自然、专业。\n2. 直接输出译文，不要任何解释，不要加前缀。\n\n待翻译文本：\nTEXT\n",
+  "toChinese": "\n你是一个专业的多语言翻译引擎。请将下方文本翻译成地道的简体中文。\n\n规则：\n1. 追求信达雅：根据中文表达习惯自由调整句式、段落和语序，确保译文流畅、自然、专业。\n2. 直接输出译文，不要任何解释，不要加前缀。\n\n待翻译文本：\nTEXT\n",
+  "back": "\n你是一个专业的回译引擎。用户要通过回译核对一段译文是否准确，请将下方文本忠实地翻译成LANGUAGE。\n\n规则：\n1. 忠实直译：逐句保留原意、语气、信息量和逻辑关系，不要润色、补充、删减或纠正。\n2. 遇到含糊、生硬或可能有误的表达，按字面意思译出，不要猜测作者本意。\n3. 直接输出译文，不要任何解释，不要加前缀。\n\n待回译文本：\nTEXT\n",
+  "ocr": "请对这张图片进行 OCR，只提取图片中可见的文字。\n要求：\n1. 保留原有段落、换行和阅读顺序。\n2. 不要翻译、不要解释、不要添加标题或 Markdown。\n3. 如果图片中没有可识别文字，只输出 NO_TEXT_FOUND。"
+ },
+ "rules": [
+  {
+   "text": "",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "",
+   "replacements": {},
+   "prose": "",
+   "formatInstruction": "",
+   "normalized": [],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "hello",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "hello",
+   "replacements": {},
+   "prose": "hello",
+   "formatInstruction": "",
+   "normalized": [
+    "hello"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "Hello",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "Hello",
+   "replacements": {},
+   "prose": "Hello",
+   "formatInstruction": "",
+   "normalized": [
+    "Hello"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "Hello world",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "Hello world",
+   "replacements": {},
+   "prose": "Hello world",
+   "formatInstruction": "",
+   "normalized": [
+    "Hello world"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "look up to",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "look up to",
+   "replacements": {},
+   "prose": "look up to",
+   "formatInstruction": "",
+   "normalized": [
+    "look up to"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "one two three four",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "one two three four",
+   "replacements": {},
+   "prose": "one two three four",
+   "formatInstruction": "",
+   "normalized": [
+    "one two three four"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "state-of-the-art",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "state-of-the-art",
+   "replacements": {},
+   "prose": "state-of-the-art",
+   "formatInstruction": "",
+   "normalized": [
+    "state-of-the-art"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "don't",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "don't",
+   "replacements": {},
+   "prose": "don't",
+   "formatInstruction": "",
+   "normalized": [
+    "don't"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "A plain translation sentence.",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "A plain translation sentence.",
+   "replacements": {},
+   "prose": "A plain translation sentence.",
+   "formatInstruction": "",
+   "normalized": [
+    "A plain translation sentence."
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "The weather is nice and the sun is out.",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "The weather is nice and the sun is out.",
+   "replacements": {},
+   "prose": "The weather is nice and the sun is out.",
+   "formatInstruction": "",
+   "normalized": [
+    "The weather is nice and the sun is out."
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "这是一个测试句子。",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "这是一个测试句子。",
+   "replacements": {},
+   "prose": "这是一个测试句子。",
+   "formatInstruction": "",
+   "normalized": [
+    "这是一个测试句子。"
+   ],
+   "isDictionary": false,
+   "autoMode": "zh2en",
+   "language": "zh"
+  },
+  {
+   "text": "翻译",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "翻译",
+   "replacements": {},
+   "prose": "翻译",
+   "formatInstruction": "",
+   "normalized": [
+    "翻译"
+   ],
+   "isDictionary": true,
+   "autoMode": "zh2en",
+   "language": "zh"
+  },
+  {
+   "text": "人工智能",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "人工智能",
+   "replacements": {},
+   "prose": "人工智能",
+   "formatInstruction": "",
+   "normalized": [
+    "人工智能"
+   ],
+   "isDictionary": true,
+   "autoMode": "zh2en",
+   "language": "zh"
+  },
+  {
+   "text": "我喜欢",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "我喜欢",
+   "replacements": {},
+   "prose": "我喜欢",
+   "formatInstruction": "",
+   "normalized": [
+    "我喜欢"
+   ],
+   "isDictionary": false,
+   "autoMode": "zh2en",
+   "language": "zh"
+  },
+  {
+   "text": "这是",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "这是",
+   "replacements": {},
+   "prose": "这是",
+   "formatInstruction": "",
+   "normalized": [
+    "这是"
+   ],
+   "isDictionary": false,
+   "autoMode": "zh2en",
+   "language": "zh"
+  },
+  {
+   "text": "一二三四五",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "一二三四五",
+   "replacements": {},
+   "prose": "一二三四五",
+   "formatInstruction": "",
+   "normalized": [
+    "一二三四五"
+   ],
+   "isDictionary": false,
+   "autoMode": "zh2en",
+   "language": "zh"
+  },
+  {
+   "text": "混合 text",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "混合 text",
+   "replacements": {},
+   "prose": "混合 text",
+   "formatInstruction": "",
+   "normalized": [
+    "混合 text"
+   ],
+   "isDictionary": true,
+   "autoMode": "zh2en",
+   "language": "zh"
+  },
+  {
+   "text": "mixed 文本 words",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "mixed 文本 words",
+   "replacements": {},
+   "prose": "mixed 文本 words",
+   "formatInstruction": "",
+   "normalized": [
+    "mixed 文本 words"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "これはテストです。",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "これはテストです。",
+   "replacements": {},
+   "prose": "これはテストです。",
+   "formatInstruction": "",
+   "normalized": [
+    "これはテストです。"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "ja"
+  },
+  {
+   "text": "이것은 테스트입니다.",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "이것은 테스트입니다.",
+   "replacements": {},
+   "prose": "이것은 테스트입니다.",
+   "formatInstruction": "",
+   "normalized": [
+    "이것은 테스트입니다."
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "ko"
+  },
+  {
+   "text": "Это проверка связи.",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "Это проверка связи.",
+   "replacements": {},
+   "prose": "Это проверка связи.",
+   "formatInstruction": "",
+   "normalized": [
+    "Это проверка связи."
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "ru"
+  },
+  {
+   "text": "Le chat est sur la table et il dort.",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "Le chat est sur la table et il dort.",
+   "replacements": {},
+   "prose": "Le chat est sur la table et il dort.",
+   "formatInstruction": "",
+   "normalized": [
+    "Le chat est sur la table et il dort."
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "fr"
+  },
+  {
+   "text": "Der Hund ist nicht in der Küche.",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "Der Hund ist nicht in der Küche.",
+   "replacements": {},
+   "prose": "Der Hund ist nicht in der Küche.",
+   "formatInstruction": "",
+   "normalized": [
+    "Der Hund ist nicht in der Küche."
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "de"
+  },
+  {
+   "text": "El perro está en la casa con los niños.",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "El perro está en la casa con los niños.",
+   "replacements": {},
+   "prose": "El perro está en la casa con los niños.",
+   "formatInstruction": "",
+   "normalized": [
+    "El perro está en la casa con los niños."
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "es"
+  },
+  {
+   "text": "Il gatto non è sul tavolo della cucina.",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "Il gatto non è sul tavolo della cucina.",
+   "replacements": {},
+   "prose": "Il gatto non è sul tavolo della cucina.",
+   "formatInstruction": "",
+   "normalized": [
+    "Il gatto non è sul tavolo della cucina."
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "it"
+  },
+  {
+   "text": "12345",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "12345",
+   "replacements": {},
+   "prose": "12345",
+   "formatInstruction": "",
+   "normalized": [
+    "12345"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "カタカナ",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "カタカナ",
+   "replacements": {},
+   "prose": "カタカナ",
+   "formatInstruction": "",
+   "normalized": [
+    "カタカナ"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "ja"
+  },
+  {
+   "text": "한국어",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "한국어",
+   "replacements": {},
+   "prose": "한국어",
+   "formatInstruction": "",
+   "normalized": [
+    "한국어"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "ko"
+  },
+  {
+   "text": "😀",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "😀",
+   "replacements": {},
+   "prose": "😀",
+   "formatInstruction": "",
+   "normalized": [
+    "😀"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "😀 hello",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "😀 hello",
+   "replacements": {},
+   "prose": "😀 hello",
+   "formatInstruction": "",
+   "normalized": [
+    "😀 hello"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "ab😀cd",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "ab😀cd",
+   "replacements": {},
+   "prose": "ab😀cd",
+   "formatInstruction": "",
+   "normalized": [
+    "ab😀cd"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "Prices range from $5 to $10.",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "Prices range from $5 to $10.",
+   "replacements": {},
+   "prose": "Prices range from $5 to $10.",
+   "formatInstruction": "",
+   "normalized": [
+    "Prices range from $5 to $10."
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "The result is $E = mc^2$.",
+   "isLatex": true,
+   "isMarkdown": false,
+   "isStructured": true,
+   "protected": "The result is [[SNIPDO_LATEX_0000]].",
+   "replacements": {
+    "[[SNIPDO_LATEX_0000]]": "$E = mc^2$"
+   },
+   "prose": "The result is .",
+   "formatInstruction": "格式要求：\n- 输入文本包含 LaTeX；保持命令名、环境、花括号、换行及整体文档结构不变。\n- 只翻译正文、标题、图表标题以及文本命令参数中的自然语言；不要翻译公式、注释、引用键、标签、URL、文件路径或宏名称。\n- [[SNIPDO_LATEX_0000]] 这类标记是受保护的 LaTeX 片段占位符；必须逐字原样输出，每个标记恰好保留一次，不得改写、翻译或添加空格。\n- 直接输出原始 LaTeX，不要添加 Markdown 代码围栏。\n- 直接输出保留格式后的译文，不要解释你做了什么。",
+   "normalized": [
+    "The result is $E = mc^2$."
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "C:\\Users\\example\\notes.txt",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "C:\\Users\\example\\notes.txt",
+   "replacements": {},
+   "prose": "C:\\Users\\example\\notes.txt",
+   "formatInstruction": "",
+   "normalized": [
+    "C:\\Users\\example\\notes.txt"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "\\section{Introduction}",
+   "isLatex": true,
+   "isMarkdown": false,
+   "isStructured": true,
+   "protected": "\\section{Introduction}",
+   "replacements": {},
+   "prose": "Introduction",
+   "formatInstruction": "格式要求：\n- 输入文本包含 LaTeX；保持命令名、环境、花括号、换行及整体文档结构不变。\n- 只翻译正文、标题、图表标题以及文本命令参数中的自然语言；不要翻译公式、注释、引用键、标签、URL、文件路径或宏名称。\n- [[SNIPDO_LATEX_0000]] 这类标记是受保护的 LaTeX 片段占位符；必须逐字原样输出，每个标记恰好保留一次，不得改写、翻译或添加空格。\n- 直接输出原始 LaTeX，不要添加 Markdown 代码围栏。\n- 直接输出保留格式后的译文，不要解释你做了什么。",
+   "normalized": [
+    "\\section{Introduction}"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "\\section*{Intro} text",
+   "isLatex": true,
+   "isMarkdown": false,
+   "isStructured": true,
+   "protected": "\\section*{Intro} text",
+   "replacements": {},
+   "prose": "Intro text",
+   "formatInstruction": "格式要求：\n- 输入文本包含 LaTeX；保持命令名、环境、花括号、换行及整体文档结构不变。\n- 只翻译正文、标题、图表标题以及文本命令参数中的自然语言；不要翻译公式、注释、引用键、标签、URL、文件路径或宏名称。\n- [[SNIPDO_LATEX_0000]] 这类标记是受保护的 LaTeX 片段占位符；必须逐字原样输出，每个标记恰好保留一次，不得改写、翻译或添加空格。\n- 直接输出原始 LaTeX，不要添加 Markdown 代码围栏。\n- 直接输出保留格式后的译文，不要解释你做了什么。",
+   "normalized": [
+    "\\section*{Intro} text"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "\\[x^2 + y^2 = z^2\\]",
+   "isLatex": true,
+   "isMarkdown": false,
+   "isStructured": true,
+   "protected": "[[SNIPDO_LATEX_0000]]",
+   "replacements": {
+    "[[SNIPDO_LATEX_0000]]": "\\[x^2 + y^2 = z^2\\]"
+   },
+   "prose": "",
+   "formatInstruction": "格式要求：\n- 输入文本包含 LaTeX；保持命令名、环境、花括号、换行及整体文档结构不变。\n- 只翻译正文、标题、图表标题以及文本命令参数中的自然语言；不要翻译公式、注释、引用键、标签、URL、文件路径或宏名称。\n- [[SNIPDO_LATEX_0000]] 这类标记是受保护的 LaTeX 片段占位符；必须逐字原样输出，每个标记恰好保留一次，不得改写、翻译或添加空格。\n- 直接输出原始 LaTeX，不要添加 Markdown 代码围栏。\n- 直接输出保留格式后的译文，不要解释你做了什么。",
+   "normalized": [
+    "\\[x^2 + y^2 = z^2\\]"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "\\(a + b\\) and more",
+   "isLatex": true,
+   "isMarkdown": false,
+   "isStructured": true,
+   "protected": "[[SNIPDO_LATEX_0000]] and more",
+   "replacements": {
+    "[[SNIPDO_LATEX_0000]]": "\\(a + b\\)"
+   },
+   "prose": "and more",
+   "formatInstruction": "格式要求：\n- 输入文本包含 LaTeX；保持命令名、环境、花括号、换行及整体文档结构不变。\n- 只翻译正文、标题、图表标题以及文本命令参数中的自然语言；不要翻译公式、注释、引用键、标签、URL、文件路径或宏名称。\n- [[SNIPDO_LATEX_0000]] 这类标记是受保护的 LaTeX 片段占位符；必须逐字原样输出，每个标记恰好保留一次，不得改写、翻译或添加空格。\n- 直接输出原始 LaTeX，不要添加 Markdown 代码围栏。\n- 直接输出保留格式后的译文，不要解释你做了什么。",
+   "normalized": [
+    "\\(a + b\\) and more"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "$$\\sum_{i=1}^n i$$",
+   "isLatex": true,
+   "isMarkdown": false,
+   "isStructured": true,
+   "protected": "[[SNIPDO_LATEX_0000]]",
+   "replacements": {
+    "[[SNIPDO_LATEX_0000]]": "$$\\sum_{i=1}^n i$$"
+   },
+   "prose": "",
+   "formatInstruction": "格式要求：\n- 输入文本包含 LaTeX；保持命令名、环境、花括号、换行及整体文档结构不变。\n- 只翻译正文、标题、图表标题以及文本命令参数中的自然语言；不要翻译公式、注释、引用键、标签、URL、文件路径或宏名称。\n- [[SNIPDO_LATEX_0000]] 这类标记是受保护的 LaTeX 片段占位符；必须逐字原样输出，每个标记恰好保留一次，不得改写、翻译或添加空格。\n- 直接输出原始 LaTeX，不要添加 Markdown 代码围栏。\n- 直接输出保留格式后的译文，不要解释你做了什么。",
+   "normalized": [
+    "$$\\sum_{i=1}^n i$$"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "\\alpha中",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "\\alpha中",
+   "replacements": {},
+   "prose": "\\alpha中",
+   "formatInstruction": "",
+   "normalized": [
+    "\\alpha中"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "\\alpha x",
+   "isLatex": true,
+   "isMarkdown": false,
+   "isStructured": true,
+   "protected": "\\alpha x",
+   "replacements": {},
+   "prose": "x",
+   "formatInstruction": "格式要求：\n- 输入文本包含 LaTeX；保持命令名、环境、花括号、换行及整体文档结构不变。\n- 只翻译正文、标题、图表标题以及文本命令参数中的自然语言；不要翻译公式、注释、引用键、标签、URL、文件路径或宏名称。\n- [[SNIPDO_LATEX_0000]] 这类标记是受保护的 LaTeX 片段占位符；必须逐字原样输出，每个标记恰好保留一次，不得改写、翻译或添加空格。\n- 直接输出原始 LaTeX，不要添加 Markdown 代码围栏。\n- 直接输出保留格式后的译文，不要解释你做了什么。",
+   "normalized": [
+    "\\alpha x"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "\\alphabet",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "\\alphabet",
+   "replacements": {},
+   "prose": "\\alphabet",
+   "formatInstruction": "",
+   "normalized": [
+    "\\alphabet"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "\\begin{align} F &= ma \\end{align} then prose",
+   "isLatex": true,
+   "isMarkdown": false,
+   "isStructured": true,
+   "protected": "[[SNIPDO_LATEX_0000]] then prose",
+   "replacements": {
+    "[[SNIPDO_LATEX_0000]]": "\\begin{align} F &= ma \\end{align}"
+   },
+   "prose": "then prose",
+   "formatInstruction": "格式要求：\n- 输入文本包含 LaTeX；保持命令名、环境、花括号、换行及整体文档结构不变。\n- 只翻译正文、标题、图表标题以及文本命令参数中的自然语言；不要翻译公式、注释、引用键、标签、URL、文件路径或宏名称。\n- [[SNIPDO_LATEX_0000]] 这类标记是受保护的 LaTeX 片段占位符；必须逐字原样输出，每个标记恰好保留一次，不得改写、翻译或添加空格。\n- 直接输出原始 LaTeX，不要添加 Markdown 代码围栏。\n- 直接输出保留格式后的译文，不要解释你做了什么。",
+   "normalized": [
+    "\\begin{align} F &= ma \\end{align} then prose"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "\\section{Energy}\nThe relation is $E = mc^2$; see \\ref{eq:mass}.\n% a comment",
+   "isLatex": true,
+   "isMarkdown": false,
+   "isStructured": true,
+   "protected": "\\section{Energy}\nThe relation is [[SNIPDO_LATEX_0000]]; see [[SNIPDO_LATEX_0001]].\n[[SNIPDO_LATEX_0002]]",
+   "replacements": {
+    "[[SNIPDO_LATEX_0000]]": "$E = mc^2$",
+    "[[SNIPDO_LATEX_0001]]": "\\ref{eq:mass}",
+    "[[SNIPDO_LATEX_0002]]": "% a comment"
+   },
+   "prose": "Energy The relation is ; see .",
+   "formatInstruction": "格式要求：\n- 输入文本包含 LaTeX；保持命令名、环境、花括号、换行及整体文档结构不变。\n- 只翻译正文、标题、图表标题以及文本命令参数中的自然语言；不要翻译公式、注释、引用键、标签、URL、文件路径或宏名称。\n- [[SNIPDO_LATEX_0000]] 这类标记是受保护的 LaTeX 片段占位符；必须逐字原样输出，每个标记恰好保留一次，不得改写、翻译或添加空格。\n- 直接输出原始 LaTeX，不要添加 Markdown 代码围栏。\n- 直接输出保留格式后的译文，不要解释你做了什么。",
+   "normalized": [
+    "\\section{Energy}\nThe relation is $E = mc^2$; see \\ref{eq:mass}.\n% a comment"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "\\documentclass{article}\n\\usepackage{amsmath}\n\\section{实验说明}\n\\begin{equation}\nabcdefghijklmnopqrstuvwxyz = E + mc^2\n\\end{equation}\n这是中文正文。\n",
+   "isLatex": true,
+   "isMarkdown": false,
+   "isStructured": true,
+   "protected": "\\documentclass{article}\n\\usepackage{amsmath}\n\\section{实验说明}\n[[SNIPDO_LATEX_0000]]\n这是中文正文。\n",
+   "replacements": {
+    "[[SNIPDO_LATEX_0000]]": "\\begin{equation}\nabcdefghijklmnopqrstuvwxyz = E + mc^2\n\\end{equation}"
+   },
+   "prose": "实验说明 这是中文正文。",
+   "formatInstruction": "格式要求：\n- 输入文本包含 LaTeX；保持命令名、环境、花括号、换行及整体文档结构不变。\n- 只翻译正文、标题、图表标题以及文本命令参数中的自然语言；不要翻译公式、注释、引用键、标签、URL、文件路径或宏名称。\n- [[SNIPDO_LATEX_0000]] 这类标记是受保护的 LaTeX 片段占位符；必须逐字原样输出，每个标记恰好保留一次，不得改写、翻译或添加空格。\n- 直接输出原始 LaTeX，不要添加 Markdown 代码围栏。\n- 直接输出保留格式后的译文，不要解释你做了什么。",
+   "normalized": [
+    "\\documentclass{article}\n\\usepackage{amsmath}\n\\section{实验说明}\n\\begin{equation}\nabcdefghijklmnopqrstuvwxyz = E + mc^2\n\\end{equation}\n这是中文正文。"
+   ],
+   "isDictionary": false,
+   "autoMode": "zh2en",
+   "language": "zh"
+  },
+  {
+   "text": "\\verb|x y| and \\cite[p. 3]{knuth} done",
+   "isLatex": true,
+   "isMarkdown": false,
+   "isStructured": true,
+   "protected": "[[SNIPDO_LATEX_0000]] and [[SNIPDO_LATEX_0001]] done",
+   "replacements": {
+    "[[SNIPDO_LATEX_0000]]": "\\verb|x y|",
+    "[[SNIPDO_LATEX_0001]]": "\\cite[p. 3]{knuth}"
+   },
+   "prose": "and done",
+   "formatInstruction": "格式要求：\n- 输入文本包含 LaTeX；保持命令名、环境、花括号、换行及整体文档结构不变。\n- 只翻译正文、标题、图表标题以及文本命令参数中的自然语言；不要翻译公式、注释、引用键、标签、URL、文件路径或宏名称。\n- [[SNIPDO_LATEX_0000]] 这类标记是受保护的 LaTeX 片段占位符；必须逐字原样输出，每个标记恰好保留一次，不得改写、翻译或添加空格。\n- 直接输出原始 LaTeX，不要添加 Markdown 代码围栏。\n- 直接输出保留格式后的译文，不要解释你做了什么。",
+   "normalized": [
+    "\\verb|x y| and \\cite[p. 3]{knuth} done"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "# Title\n\n- Item",
+   "isLatex": false,
+   "isMarkdown": true,
+   "isStructured": true,
+   "protected": "# Title\n\n- Item",
+   "replacements": {},
+   "prose": "# Title\n\n- Item",
+   "formatInstruction": "格式要求：\n- 输入文本包含 Markdown/结构化格式；请保留标题层级、段落、列表、表格、链接和代码块结构。\n- 只翻译自然语言内容，不要翻译 Markdown 标记、URL、代码块、行内代码、变量名、函数名、文件路径和 HTML/XML 标签名。\n- 如果输入是表格，请保持相同的列数和行数；只翻译单元格里的自然语言。\n- 直接输出保留格式后的译文，不要解释你做了什么。",
+   "normalized": [
+    "# Title\n\n- Item"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "1. first\n2. second",
+   "isLatex": false,
+   "isMarkdown": true,
+   "isStructured": true,
+   "protected": "1. first\n2. second",
+   "replacements": {},
+   "prose": "1. first\n2. second",
+   "formatInstruction": "格式要求：\n- 输入文本包含 Markdown/结构化格式；请保留标题层级、段落、列表、表格、链接和代码块结构。\n- 只翻译自然语言内容，不要翻译 Markdown 标记、URL、代码块、行内代码、变量名、函数名、文件路径和 HTML/XML 标签名。\n- 如果输入是表格，请保持相同的列数和行数；只翻译单元格里的自然语言。\n- 直接输出保留格式后的译文，不要解释你做了什么。",
+   "normalized": [
+    "1. first\n2. second"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "> quoted line",
+   "isLatex": false,
+   "isMarkdown": true,
+   "isStructured": true,
+   "protected": "> quoted line",
+   "replacements": {},
+   "prose": "> quoted line",
+   "formatInstruction": "格式要求：\n- 输入文本包含 Markdown/结构化格式；请保留标题层级、段落、列表、表格、链接和代码块结构。\n- 只翻译自然语言内容，不要翻译 Markdown 标记、URL、代码块、行内代码、变量名、函数名、文件路径和 HTML/XML 标签名。\n- 如果输入是表格，请保持相同的列数和行数；只翻译单元格里的自然语言。\n- 直接输出保留格式后的译文，不要解释你做了什么。",
+   "normalized": [
+    "> quoted line"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "| a | b |\n| - | - |\n| 1 | 2 |",
+   "isLatex": false,
+   "isMarkdown": true,
+   "isStructured": true,
+   "protected": "| a | b |\n| - | - |\n| 1 | 2 |",
+   "replacements": {},
+   "prose": "| a | b |\n| - | - |\n| 1 | 2 |",
+   "formatInstruction": "格式要求：\n- 输入文本包含 Markdown/结构化格式；请保留标题层级、段落、列表、表格、链接和代码块结构。\n- 只翻译自然语言内容，不要翻译 Markdown 标记、URL、代码块、行内代码、变量名、函数名、文件路径和 HTML/XML 标签名。\n- 如果输入是表格，请保持相同的列数和行数；只翻译单元格里的自然语言。\n- 直接输出保留格式后的译文，不要解释你做了什么。",
+   "normalized": [
+    "| a | b |\n| - | - |\n| 1 | 2 |"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "```\ncode\n```",
+   "isLatex": false,
+   "isMarkdown": true,
+   "isStructured": true,
+   "protected": "```\ncode\n```",
+   "replacements": {},
+   "prose": "```\ncode\n```",
+   "formatInstruction": "格式要求：\n- 输入文本包含 Markdown/结构化格式；请保留标题层级、段落、列表、表格、链接和代码块结构。\n- 只翻译自然语言内容，不要翻译 Markdown 标记、URL、代码块、行内代码、变量名、函数名、文件路径和 HTML/XML 标签名。\n- 如果输入是表格，请保持相同的列数和行数；只翻译单元格里的自然语言。\n- 直接输出保留格式后的译文，不要解释你做了什么。",
+   "normalized": [
+    "```\ncode\n```"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "   - indented bullet",
+   "isLatex": false,
+   "isMarkdown": true,
+   "isStructured": true,
+   "protected": "   - indented bullet",
+   "replacements": {},
+   "prose": "   - indented bullet",
+   "formatInstruction": "格式要求：\n- 输入文本包含 Markdown/结构化格式；请保留标题层级、段落、列表、表格、链接和代码块结构。\n- 只翻译自然语言内容，不要翻译 Markdown 标记、URL、代码块、行内代码、变量名、函数名、文件路径和 HTML/XML 标签名。\n- 如果输入是表格，请保持相同的列数和行数；只翻译单元格里的自然语言。\n- 直接输出保留格式后的译文，不要解释你做了什么。",
+   "normalized": [
+    "- indented bullet"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "-not a bullet",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "-not a bullet",
+   "replacements": {},
+   "prose": "-not a bullet",
+   "formatInstruction": "",
+   "normalized": [
+    "-not a bullet"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "exam-\nple of a wrapped word",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "exam-\nple of a wrapped word",
+   "replacements": {},
+   "prose": "exam-\nple of a wrapped word",
+   "formatInstruction": "",
+   "normalized": [
+    "example of a wrapped word"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "A line that wraps\nonto the next line.\nAnother sentence here\n\nNew paragraph",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "A line that wraps\nonto the next line.\nAnother sentence here\n\nNew paragraph",
+   "replacements": {},
+   "prose": "A line that wraps\nonto the next line.\nAnother sentence here\n\nNew paragraph",
+   "formatInstruction": "",
+   "normalized": [
+    "A line that wraps onto the next line.",
+    "Another sentence here",
+    "New paragraph"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "第一行没有结束\n第二行结束。\n第三行",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "第一行没有结束\n第二行结束。\n第三行",
+   "replacements": {},
+   "prose": "第一行没有结束\n第二行结束。\n第三行",
+   "formatInstruction": "",
+   "normalized": [
+    "第一行没有结束 第二行结束。",
+    "第三行"
+   ],
+   "isDictionary": false,
+   "autoMode": "zh2en",
+   "language": "zh"
+  },
+  {
+   "text": "line one\r\nline two\rline three",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "line one\r\nline two\rline three",
+   "replacements": {},
+   "prose": "line one\r\nline two\rline three",
+   "formatInstruction": "",
+   "normalized": [
+    "line one line two line three"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "tabs\tand  double  spaces",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "tabs\tand  double  spaces",
+   "replacements": {},
+   "prose": "tabs\tand  double  spaces",
+   "formatInstruction": "",
+   "normalized": [
+    "tabs\tand  double  spaces"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "ideographic　space",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "ideographic　space",
+   "replacements": {},
+   "prose": "ideographic　space",
+   "formatInstruction": "",
+   "normalized": [
+    "ideographic　space"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "nbsp here",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "nbsp here",
+   "replacements": {},
+   "prose": "nbsp here",
+   "formatInstruction": "",
+   "normalized": [
+    "nbsp here"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "trailing newline\n",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "trailing newline\n",
+   "replacements": {},
+   "prose": "trailing newline\n",
+   "formatInstruction": "",
+   "normalized": [
+    "trailing newline"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "  surrounded  ",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "  surrounded  ",
+   "replacements": {},
+   "prose": "  surrounded  ",
+   "formatInstruction": "",
+   "normalized": [
+    "surrounded"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "quote”\nnext",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "quote”\nnext",
+   "replacements": {},
+   "prose": "quote”\nnext",
+   "formatInstruction": "",
+   "normalized": [
+    "quote”",
+    "next"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "ends with colon:\nnext",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "ends with colon:\nnext",
+   "replacements": {},
+   "prose": "ends with colon:\nnext",
+   "formatInstruction": "",
+   "normalized": [
+    "ends with colon:",
+    "next"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "semi;\nnext",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "semi;\nnext",
+   "replacements": {},
+   "prose": "semi;\nnext",
+   "formatInstruction": "",
+   "normalized": [
+    "semi;",
+    "next"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "问题？\n回答",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "问题？\n回答",
+   "replacements": {},
+   "prose": "问题？\n回答",
+   "formatInstruction": "",
+   "normalized": [
+    "问题？",
+    "回答"
+   ],
+   "isDictionary": false,
+   "autoMode": "zh2en",
+   "language": "zh"
+  },
+  {
+   "text": "你好",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "你好",
+   "replacements": {},
+   "prose": "你好",
+   "formatInstruction": "",
+   "normalized": [
+    "你好"
+   ],
+   "isDictionary": false,
+   "autoMode": "zh2en",
+   "language": "zh"
+  },
+  {
+   "text": "很好",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "很好",
+   "replacements": {},
+   "prose": "很好",
+   "formatInstruction": "",
+   "normalized": [
+    "很好"
+   ],
+   "isDictionary": false,
+   "autoMode": "zh2en",
+   "language": "zh"
+  },
+  {
+   "text": "没有",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "没有",
+   "replacements": {},
+   "prose": "没有",
+   "formatInstruction": "",
+   "normalized": [
+    "没有"
+   ],
+   "isDictionary": false,
+   "autoMode": "zh2en",
+   "language": "zh"
+  },
+  {
+   "text": "苹果 apple",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "苹果 apple",
+   "replacements": {},
+   "prose": "苹果 apple",
+   "formatInstruction": "",
+   "normalized": [
+    "苹果 apple"
+   ],
+   "isDictionary": true,
+   "autoMode": "zh2en",
+   "language": "zh"
+  },
+  {
+   "text": "苹果 apple banana",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "苹果 apple banana",
+   "replacements": {},
+   "prose": "苹果 apple banana",
+   "formatInstruction": "",
+   "normalized": [
+    "苹果 apple banana"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "a.b",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "a.b",
+   "replacements": {},
+   "prose": "a.b",
+   "formatInstruction": "",
+   "normalized": [
+    "a.b"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "foo: bar",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "foo: bar",
+   "replacements": {},
+   "prose": "foo: bar",
+   "formatInstruction": "",
+   "normalized": [
+    "foo: bar"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "abcdefghijklmnopqrstuvwxyzabcdef",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "abcdefghijklmnopqrstuvwxyzabcdef",
+   "replacements": {},
+   "prose": "abcdefghijklmnopqrstuvwxyzabcdef",
+   "formatInstruction": "",
+   "normalized": [
+    "abcdefghijklmnopqrstuvwxyzabcdef"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "abcdefghijklmnopqrstuvwxyzabcdefg",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "abcdefghijklmnopqrstuvwxyzabcdefg",
+   "replacements": {},
+   "prose": "abcdefghijklmnopqrstuvwxyzabcdefg",
+   "formatInstruction": "",
+   "normalized": [
+    "abcdefghijklmnopqrstuvwxyzabcdefg"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "aaaaaaaa bbbbbbbb cccccccc d",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "aaaaaaaa bbbbbbbb cccccccc d",
+   "replacements": {},
+   "prose": "aaaaaaaa bbbbbbbb cccccccc d",
+   "formatInstruction": "",
+   "normalized": [
+    "aaaaaaaa bbbbbbbb cccccccc d"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "aaaaaaaa bbbbbbbb cccccccccc",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "aaaaaaaa bbbbbbbb cccccccccc",
+   "replacements": {},
+   "prose": "aaaaaaaa bbbbbbbb cccccccccc",
+   "formatInstruction": "",
+   "normalized": [
+    "aaaaaaaa bbbbbbbb cccccccccc"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "éééééééééé",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "éééééééééé",
+   "replacements": {},
+   "prose": "éééééééééé",
+   "formatInstruction": "",
+   "normalized": [
+    "éééééééééé"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "ééééééééééé",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "ééééééééééé",
+   "replacements": {},
+   "prose": "ééééééééééé",
+   "formatInstruction": "",
+   "normalized": [
+    "ééééééééééé"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "1234567890a",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "1234567890a",
+   "replacements": {},
+   "prose": "1234567890a",
+   "formatInstruction": "",
+   "normalized": [
+    "1234567890a"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "123",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "123",
+   "replacements": {},
+   "prose": "123",
+   "formatInstruction": "",
+   "normalized": [
+    "123"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "Very long Chinese 中文中文中文中文中文 mixed with some english words here",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "Very long Chinese 中文中文中文中文中文 mixed with some english words here",
+   "replacements": {},
+   "prose": "Very long Chinese 中文中文中文中文中文 mixed with some english words here",
+   "formatInstruction": "",
+   "normalized": [
+    "Very long Chinese 中文中文中文中文中文 mixed with some english words here"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "这个 product 的 quality 非常好",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "这个 product 的 quality 非常好",
+   "replacements": {},
+   "prose": "这个 product 的 quality 非常好",
+   "formatInstruction": "",
+   "normalized": [
+    "这个 product 的 quality 非常好"
+   ],
+   "isDictionary": false,
+   "autoMode": "zh2en",
+   "language": "zh"
+  },
+  {
+   "text": "日本語のテキストと漢字",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "日本語のテキストと漢字",
+   "replacements": {},
+   "prose": "日本語のテキストと漢字",
+   "formatInstruction": "",
+   "normalized": [
+    "日本語のテキストと漢字"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "ja"
+  },
+  {
+   "text": "漢字が多い文章にかなが少し",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "漢字が多い文章にかなが少し",
+   "replacements": {},
+   "prose": "漢字が多い文章にかなが少し",
+   "formatInstruction": "",
+   "normalized": [
+    "漢字が多い文章にかなが少し"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "ja"
+  },
+  {
+   "text": "$2$ is two",
+   "isLatex": true,
+   "isMarkdown": false,
+   "isStructured": true,
+   "protected": "[[SNIPDO_LATEX_0000]] is two",
+   "replacements": {
+    "[[SNIPDO_LATEX_0000]]": "$2$"
+   },
+   "prose": "is two",
+   "formatInstruction": "格式要求：\n- 输入文本包含 LaTeX；保持命令名、环境、花括号、换行及整体文档结构不变。\n- 只翻译正文、标题、图表标题以及文本命令参数中的自然语言；不要翻译公式、注释、引用键、标签、URL、文件路径或宏名称。\n- [[SNIPDO_LATEX_0000]] 这类标记是受保护的 LaTeX 片段占位符；必须逐字原样输出，每个标记恰好保留一次，不得改写、翻译或添加空格。\n- 直接输出原始 LaTeX，不要添加 Markdown 代码围栏。\n- 直接输出保留格式后的译文，不要解释你做了什么。",
+   "normalized": [
+    "$2$ is two"
+   ],
+   "isDictionary": false,
+   "autoMode": "en2zh",
+   "language": "en"
+  },
+  {
+   "text": "$a$5",
+   "isLatex": false,
+   "isMarkdown": false,
+   "isStructured": false,
+   "protected": "$a$5",
+   "replacements": {},
+   "prose": "$a$5",
+   "formatInstruction": "",
+   "normalized": [
+    "$a$5"
+   ],
+   "isDictionary": true,
+   "autoMode": "en2zh",
+   "language": "en"
+  }
+ ]
+}

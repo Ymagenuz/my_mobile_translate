@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">SnipDo Translate</string>
+    <string name="selection_service_label">SnipDo screen selection</string>
+    <string name="selection_service_description">Lets you select words anywhere on your screen to translate them. It only takes a screenshot when you tap the Select on screen tile. It can\'t read the content of other apps, and screenshots stay in memory on your phone.</string>
+    <string name="tile_select_on_screen">Select on screen</string>
+    <string name="tile_translate_clipboard">Translate clipboard</string>
+    <string name="action_open_in_app">Open in app</string>
+    <string name="action_close">Close</string>
+    <string name="action_camera">Camera</string>
+    <string name="action_photo">Photo</string>
+    <string name="photo_unreadable">That picture couldn\'t be opened.</string>
+    <string name="label_from_image">FROM IMAGE</string>
+    <string name="tool_ai_short" translatable="false">AI</string>
+    <string name="tool_read_with_ai">Read the whole image with the vision model</string>
+
+    <string name="pen_text">Text pen</string>
+    <string name="pen_plus">Plus pen. Tap again to change its width.</string>
+    <string name="pen_minus">Minus pen. Tap again to change its width.</string>
+    <string name="pen_lasso">Lasso</string>
+    <string name="pen_paragraph">Paragraph pen</string>
+    <string name="pen_area">Area pen: read a region with the vision model</string>
+    <string name="tool_move">Move the toolbar</string>
+    <string name="tool_undo">Undo</string>
+    <string name="tool_redo">Redo</string>
+    <string name="tool_all">Select all</string>
+    <string name="tool_all_short">All</string>
+    <string name="tool_clear">Clear selection</string>
+    <string name="tool_script">Scan language</string>
+    <string name="tool_collapse">Collapse the toolbar</string>
+    <string name="order_reading">Word order: reading order</string>
+    <string name="order_selection">Word order: as selected</string>
+
+    <string name="selection_capture_failed">The screen couldn\'t be captured.</string>
+    <string name="selection_scan_failed">The text scan didn\'t work. The area pen can still read a region.</string>
+    <string name="selection_blocked">This app doesn\'t allow its screen to be captured.</string>
+    <string name="selection_no_text">No text found. Try the area pen for anything the scan can\'t read.</string>
+    <string name="selection_reading_image">Reading the selected area…</string>
+    <string name="error_ocr_unsupported">%1$s doesn\'t support image OCR</string>
+    <string name="error_no_text_found">No text was found in the image.</string>
+    <string name="label_original">ORIGINAL</string>
+
+    <string name="action_translate">Translate</string>
+    <string name="action_translating">Translating…</string>
+    <string name="action_looking_up">Looking up…</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_copied">Copied</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_try_again">Try again</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_back">Back</string>
+    <string name="action_open_settings">Open Settings</string>
+
+    <string name="title_history">History</string>
+    <string name="title_settings">Settings</string>
+    <string name="input_label">Text to translate</string>
+    <string name="mode_dictionary">Dictionary</string>
+    <string name="language_auto">Auto</string>
+    <string name="language_default">Default</string>
+    <string name="language_to">to</string>
+
+    <string name="label_auto_translation">AUTO TRANSLATION</string>
+    <string name="label_chinese_translation">CHINESE TRANSLATION</string>
+    <string name="label_english_translation">ENGLISH TRANSLATION</string>
+    <string name="label_language_translation">%1$s TRANSLATION</string>
+    <string name="label_dictionary">DICTIONARY</string>
+    <string name="label_back_translation">BACK TRANSLATION · %1$s</string>
+    <string name="back_translate">Back-translate</string>
+
+    <string name="note_stopped">Stopped</string>
+    <string name="error_no_key">No API key is set, so the translation was cancelled.</string>
+    <string name="error_no_model">Fetch and select a model in Settings, or enter a model ID.</string>
+    <string name="error_translation">Translation failed: %1$s</string>
+    <string name="back_running">Back-translating…</string>
+    <string name="back_stopped">[Back-translation stopped]</string>
+    <string name="back_no_key">[No API key is set; can\'t back-translate]</string>
+    <string name="back_error">[Back-translation error: %1$s]</string>
+    <string name="back_same_language">The source and the translation are in the same language; there\'s nothing to back-translate.</string>
+
+    <string name="history_empty">No history</string>
+    <string name="history_clear">Clear history</string>
+
+    <string name="settings_language">Language</string>
+    <string name="settings_about">About</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_check">Check for updates</string>
+    <string name="about_checking">Checking…</string>
+    <string name="about_up_to_date">You have the latest version.</string>
+    <string name="about_available">New version available: %1$s</string>
+    <string name="about_download">View and download</string>
+    <string name="about_check_failed">Couldn\'t check for updates: %1$s</string>
+    <string name="settings_update_badge">Settings ⬇</string>
+    <string name="settings_selection">Screen selection</string>
+    <string name="settings_selection_on">On. Tap the Select on screen tile in Quick Settings to use it.</string>
+    <string name="settings_selection_off">Off. It needs a one-time setup:</string>
+    <string name="settings_selection_steps">1. Open Accessibility settings and turn on SnipDo screen selection.\n2. If Android says it\'s a restricted setting, open App info, tap the ⋮ menu, choose Allow restricted settings, and try step 1 again.\n3. Add the Select on screen tile to Quick Settings.</string>
+    <string name="settings_selection_privacy">It can only take a screenshot when you tap the tile, and can\'t read other apps\' content. Screenshots stay in memory on this phone. Nothing is sent until you confirm, and then only the words you selected.</string>
+    <string name="settings_selection_unsupported">Screen selection needs Android 12 or later.</string>
+    <string name="settings_open_accessibility">Accessibility settings</string>
+    <string name="settings_open_app_info">App info</string>
+    <string name="settings_add_select_tile">Add Select on screen tile</string>
+    <string name="settings_add_clipboard_tile">Add Translate clipboard tile</string>
+    <string name="settings_translation">Translation</string>
+    <string name="settings_back_translation">Back-translate each finished translation</string>
+    <string name="settings_api">API</string>
+    <string name="settings_api_hint">Every provider uses the OpenAI Chat Completions format. API keys are encrypted and stored per provider on this phone.</string>
+    <string name="settings_provider">Provider</string>
+    <string name="settings_base_url">Base URL</string>
+    <string name="settings_api_key">API key</string>
+    <string name="settings_model">Model</string>
+    <string name="settings_fetch_models">Fetch models</string>
+    <string name="settings_fetching">Fetching…</string>
+    <string name="settings_search_models">Search models</string>
+    <string name="settings_vision">Supports image OCR</string>
+    <string name="settings_disable_thinking">Turn off thinking</string>
+    <string name="settings_saved">Saved</string>
+    <string name="settings_invalid_config">%1$s: enter a valid HTTPS base URL and model ID. The base URL can\'t contain a key, query or fragment.</string>
+    <string name="settings_invalid_key">%1$s: that API key can\'t be used.</string>
+    <string name="settings_key_not_saved">The API key couldn\'t be saved on this phone.</string>
+    <string name="settings_need_key_for_models">Enter the API key first.</string>
+</resources>
