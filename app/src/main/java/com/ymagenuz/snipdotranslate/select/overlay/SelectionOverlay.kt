@@ -22,18 +22,26 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -118,6 +126,11 @@ class SelectionOverlay(
     private var sheetVisible by mutableStateOf(false)
     private var readingImage by mutableStateOf(false)
     private var fromImage by mutableStateOf(false)
+    // The source text being corrected before it's translated, for what the scan misread.
+    private var editing by mutableStateOf(false)
+    private var draft by mutableStateOf(TextFieldValue())
+    // Off while editing a fresh selection, so an earlier result doesn't show under it.
+    private var showResult by mutableStateOf(false)
     private var closed = false
 
     private val root = object : FrameLayout(context) {
@@ -258,7 +271,35 @@ class SelectionOverlay(
         if (text.isEmpty()) return
         val current = settings.value
         sheetVisible = true
+        editing = false
+        showResult = true
         session.translate(TranslationRequest(text, false, current.sourceLanguage, current.targetLanguage))
+    }
+
+    /** Opens the selected words for correcting before anything is sent. */
+    private fun editSelection() {
+        val text = selectedText()
+        if (text.isEmpty()) return
+        session.stop()
+        fromImage = false
+        showResult = false
+        startEditing(text)
+        sheetVisible = true
+    }
+
+    /** Opens the text that was just translated, to correct it and translate again. */
+    private fun editSource() {
+        startEditing(session.state.value.request?.text.orEmpty())
+    }
+
+    private fun startEditing(text: String) {
+        draft = TextFieldValue(text, TextRange(text.length))
+        editing = true
+    }
+
+    private fun cancelEditing() {
+        // Nothing was translated yet, so there's nothing to go back to in the sheet.
+        if (showResult) editing = false else closeSheet()
     }
 
     private fun closeSheet() {
@@ -266,6 +307,8 @@ class SelectionOverlay(
         sheetVisible = false
         readingImage = false
         fromImage = false
+        editing = false
+        showResult = false
     }
 
     /** Hands the text to the main screen, where it can be edited and translated again. */
@@ -298,6 +341,8 @@ class SelectionOverlay(
 
     private fun readWithVision(source: Bitmap, afterRead: () -> Unit) {
         sheetVisible = true
+        editing = false
+        showResult = true
         readingImage = true
         scope.launch {
             val result = readImageWithVision(app, source)
@@ -363,6 +408,7 @@ class SelectionOverlay(
                 onNextScript = { startScan(ScanScript.entries[(toolbar.script.ordinal + 1) % ScanScript.entries.size]) },
                 onCopy = ::copySelection,
                 onTranslate = { translate(selectedText()) },
+                onEdit = ::editSelection,
                 onClose = ::close,
                 onMoved = ::savePrefs,
                 onReadWithAi = if (isPhoto) ::readWholeImage else null,
@@ -387,19 +433,25 @@ class SelectionOverlay(
                     CircularProgressIndicator()
                     Text(stringResource(R.string.selection_reading_image))
                 } else {
-                    state.request?.text?.takeIf { it.isNotEmpty() }?.let {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                stringResource(if (fromImage) R.string.label_from_image else R.string.label_original),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
-                            Spacer(Modifier.weight(1f))
-                            TextButton(onClick = ::openInApp) { Text(stringResource(R.string.action_open_in_app)) }
+                    val label = stringResource(if (fromImage) R.string.label_from_image else R.string.label_original)
+                    if (editing) {
+                        SourceEditor(label)
+                    } else {
+                        state.request?.text?.takeIf { it.isNotEmpty() }?.let {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    label,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                                Spacer(Modifier.weight(1f))
+                                TextButton(onClick = ::editSource) { Text(stringResource(R.string.action_edit)) }
+                                TextButton(onClick = ::openInApp) { Text(stringResource(R.string.action_open_in_app)) }
+                            }
+                            Text(it, maxLines = 3, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyMedium)
                         }
-                        Text(it, maxLines = 3, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyMedium)
                     }
-                    if (state.status != RunStatus.IDLE) {
+                    if (showResult && state.status != RunStatus.IDLE) {
                         ResultPane(
                             state = state,
                             selectable = false,
@@ -415,6 +467,30 @@ class SelectionOverlay(
                     }
                 }
             }
+        }
+    }
+
+    /** The source text in an editable field, translated again with the corrections. */
+    @Composable
+    private fun SourceEditor(label: String) {
+        val focus = remember { FocusRequester() }
+        LaunchedEffect(Unit) { focus.requestFocus() }
+        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+        OutlinedTextField(
+            value = draft,
+            onValueChange = { draft = it },
+            minLines = 2,
+            maxLines = 8,
+            textStyle = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focus),
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = { translate(draft.text.trim()) }, enabled = draft.text.isNotBlank()) {
+                Text(stringResource(R.string.action_translate))
+            }
+            TextButton(onClick = ::cancelEditing) { Text(stringResource(R.string.action_cancel)) }
         }
     }
 }

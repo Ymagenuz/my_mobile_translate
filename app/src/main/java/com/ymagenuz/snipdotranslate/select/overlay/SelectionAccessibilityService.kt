@@ -111,6 +111,8 @@ class SelectionAccessibilityService : AccessibilityService() {
             PixelFormat.OPAQUE,
         ).apply {
             layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+            // The keyboard mustn't resize or shift the frozen screen; the sheet moves up by itself.
+            softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
         }
         overlay = SelectionOverlay(
             // Wrapped each time, because the service outlives a change of language.

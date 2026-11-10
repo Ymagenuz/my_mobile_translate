@@ -14,6 +14,14 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 FAST_DELAY = 0.05
 SLOW_DELAY = 1.0
+STREAM_DELAY = 0.06
+STREAM_TEXT = (
+    "## 流式译文\n\n"
+    "敏捷的棕色狐狸跳过了那只懒狗。这句话包含了英文字母表中的每一个字母，常用于测试字体和键盘。\n\n"
+    "- 第一项：**加粗**的内容\n"
+    "- 第二项：`代码`和[链接](https://example.com)\n\n"
+    "最后一段文字逐渐出现，用来观察淡入效果是否平滑。"
+)
 
 
 def chunks_for(prompt: str) -> tuple[list[str], float]:
@@ -21,6 +29,9 @@ def chunks_for(prompt: str) -> tuple[list[str], float]:
         return ["这是", "部分", "译文"], FAST_DELAY
     if "SIMULATE SLOW" in prompt:
         return [f"第{number}段慢速译文。\n\n" for number in range(1, 40)], SLOW_DELAY
+    if "SIMULATE STREAM" in prompt:
+        # A few characters at a time, like a real model, to watch text fade in.
+        return [STREAM_TEXT[start:start + 3] for start in range(0, len(STREAM_TEXT), 3)], STREAM_DELAY
     if "专业的多语言词典助手" in prompt:
         return ["# hello\n\n", "> **语言**：English\n\n", "## 释义\n", "- **感叹词**：你好\n"], FAST_DELAY
     if "回译引擎" in prompt:

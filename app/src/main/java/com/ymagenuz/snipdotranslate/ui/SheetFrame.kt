@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -50,7 +51,9 @@ fun SheetFrame(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Uni
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.32f))
-            .pointerInput(onDismiss) { detectTapGestures { onDismiss() } },
+            .pointerInput(onDismiss) { detectTapGestures { onDismiss() } }
+            // Keeps a text field in the sheet above the keyboard.
+            .imePadding(),
     ) {
         val offset = remember { Animatable(with(density) { maxHeight.toPx() }) }
         LaunchedEffect(Unit) { offset.animateTo(0f) }

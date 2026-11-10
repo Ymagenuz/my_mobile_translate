@@ -50,6 +50,7 @@
     <string name="action_try_again">Try again</string>
     <string name="action_save">Save</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_edit">Edit</string>
     <string name="action_back">Back</string>
     <string name="action_open_settings">Open Settings</string>
 

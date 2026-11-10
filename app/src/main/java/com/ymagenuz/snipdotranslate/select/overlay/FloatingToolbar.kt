@@ -8,9 +8,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -50,6 +53,9 @@ import kotlin.math.roundToInt
 const val MIN_BRUSH_DP = 8f
 const val MAX_BRUSH_DP = 96f
 
+// Narrower than the default, so Translate, Edit and Copy fit on one row.
+private val COMPACT_BUTTON_PADDING = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+
 /** What the toolbar shows, updated from the canvas and the scan. */
 class ToolbarState {
     var pen by mutableStateOf(Pen.TEXT)
@@ -79,6 +85,7 @@ data class ToolbarActions(
     val onNextScript: () -> Unit,
     val onCopy: () -> Unit,
     val onTranslate: () -> Unit,
+    val onEdit: () -> Unit,
     val onClose: () -> Unit,
     val onMoved: () -> Unit,
     val onReadWithAi: (() -> Unit)? = null,
@@ -155,15 +162,22 @@ private fun ScanRing() {
 
 @Composable
 private fun Expanded(state: ToolbarState, actions: ToolbarActions, dragModifier: Modifier) {
-    Column(modifier = Modifier.padding(6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Tool("⠿", stringResource(R.string.tool_move), modifier = dragModifier) { }
+    // As wide as its widest row, so the corner controls sit at the toolbar's own edges.
+    Column(
+        modifier = Modifier
+            .width(IntrinsicSize.Max)
+            .padding(6.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             PenTool(state, actions, Pen.TEXT, "✎", R.string.pen_text)
             PenTool(state, actions, Pen.PLUS, "+", R.string.pen_plus)
             PenTool(state, actions, Pen.MINUS, "−", R.string.pen_minus)
             PenTool(state, actions, Pen.LASSO, "◯", R.string.pen_lasso)
             PenTool(state, actions, Pen.PARAGRAPH, "¶", R.string.pen_paragraph)
             PenTool(state, actions, Pen.AREA, "▭", R.string.pen_area)
+            Spacer(Modifier.weight(1f))
+            Tool("✕", stringResource(R.string.action_close), onClick = actions.onClose)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Tool("↶", stringResource(R.string.tool_undo), enabled = state.canUndo, onClick = actions.onUndo)
@@ -176,22 +190,32 @@ private fun Expanded(state: ToolbarState, actions: ToolbarActions, dragModifier:
                 onClick = actions.onToggleOrder,
             )
             Tool(scriptLabel(state.script), stringResource(R.string.tool_script), onClick = actions.onNextScript)
-            Tool("–", stringResource(R.string.tool_collapse)) { state.collapsed = true }
-        }
-        if (state.showWidth && (state.pen == Pen.PLUS || state.pen == Pen.MINUS)) WidthSlider(state, actions)
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Button(onClick = actions.onTranslate, enabled = state.hasSelection) {
-                Text(stringResource(R.string.action_translate))
-            }
-            OutlinedButton(onClick = actions.onCopy, enabled = state.hasSelection) {
-                Text(stringResource(R.string.action_copy))
-            }
             actions.onReadWithAi?.let {
                 Tool(stringResource(R.string.tool_ai_short), stringResource(R.string.tool_read_with_ai), onClick = it)
             }
-            Spacer(Modifier.width(2.dp))
+            Tool("–", stringResource(R.string.tool_collapse)) { state.collapsed = true }
+        }
+        if (state.showWidth && (state.pen == Pen.PLUS || state.pen == Pen.MINUS)) WidthSlider(state, actions)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            // A handle in each bottom corner, so either hand can move the toolbar.
+            Tool("⠿", stringResource(R.string.tool_move), modifier = dragModifier) { }
+            Button(onClick = actions.onTranslate, enabled = state.hasSelection, contentPadding = COMPACT_BUTTON_PADDING) {
+                Text(stringResource(R.string.action_translate))
+            }
+            // Corrects what the scan misread before anything is sent.
+            OutlinedButton(onClick = actions.onEdit, enabled = state.hasSelection, contentPadding = COMPACT_BUTTON_PADDING) {
+                Text(stringResource(R.string.action_edit))
+            }
+            OutlinedButton(onClick = actions.onCopy, enabled = state.hasSelection, contentPadding = COMPACT_BUTTON_PADDING) {
+                Text(stringResource(R.string.action_copy))
+            }
             if (state.scanning) ScanRing()
-            Tool("✕", stringResource(R.string.action_close), onClick = actions.onClose)
+            Spacer(Modifier.weight(1f))
+            Tool("⠿", stringResource(R.string.tool_move), modifier = dragModifier) { }
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.ymagenuz.snipdotranslate.ui
 
+import android.animation.ValueAnimator
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -16,6 +17,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownTypography
+import com.mikepenz.markdown.model.rememberMarkdownState
 import com.ymagenuz.snipdotranslate.R
 import com.ymagenuz.snipdotranslate.core.SOURCE_LANGUAGES
 import com.ymagenuz.snipdotranslate.core.TARGET_DEFAULT
@@ -38,6 +41,8 @@ import com.ymagenuz.snipdotranslate.domain.BackTranslationState
 import com.ymagenuz.snipdotranslate.domain.RunError
 import com.ymagenuz.snipdotranslate.domain.RunStatus
 import com.ymagenuz.snipdotranslate.domain.TranslationState
+import com.ymagenuz.snipdotranslate.ui.reveal.LocalTextReveal
+import com.ymagenuz.snipdotranslate.ui.reveal.rememberRevealComponents
 import java.util.Locale
 import kotlinx.coroutines.delay
 
@@ -81,7 +86,7 @@ fun ResultPane(
             }
         }
 
-        if (state.text.isNotEmpty()) MarkdownText(state.text, selectable)
+        if (state.text.isNotEmpty()) MarkdownText(state.text, selectable, running = state.status == RunStatus.RUNNING)
 
         when (state.status) {
             RunStatus.STOPPED -> Text(
@@ -98,23 +103,42 @@ fun ResultPane(
     }
 }
 
-/** [selectable] is off in the overlay, whose window can't host selection handles. */
+/** Set once the text has been seen streaming in; plain, since [running] changing recomposes anyway. */
+private class StreamedFlag {
+    var value = false
+}
+
+/**
+ * [selectable] is off in the overlay, whose window can't host selection handles.
+ * Text fades in while [running], and for the last chunk, which arrives as the run ends.
+ * A finished result shown later, such as after rotating, appears at once.
+ */
 @Composable
-private fun MarkdownText(text: String, selectable: Boolean) {
+private fun MarkdownText(text: String, selectable: Boolean, running: Boolean) {
     val type = MaterialTheme.typography
+    val streamed = remember { StreamedFlag() }
+    if (running) streamed.value = true
+    // Off with Android's "Remove animations", as the desktop follows Windows' setting.
+    val reveal = streamed.value && ValueAnimator.areAnimatorsEnabled()
+    // Keeps showing the previous text while the next is parsed, instead of a blank frame.
+    val markdown = rememberMarkdownState(text, retainState = true)
+    val components = rememberRevealComponents()
     val body: @Composable () -> Unit = {
-        Markdown(
-            content = text,
-            // The renderer's default headings are display-sized, too large for a phone.
-            typography = markdownTypography(
-                h1 = type.titleLarge,
-                h2 = type.titleMedium,
-                h3 = type.titleSmall,
-                h4 = type.titleSmall,
-                h5 = type.bodyLarge,
-                h6 = type.bodyLarge,
-            ),
-        )
+        CompositionLocalProvider(LocalTextReveal provides reveal) {
+            Markdown(
+                markdownState = markdown,
+                // The renderer's default headings are display-sized, too large for a phone.
+                typography = markdownTypography(
+                    h1 = type.titleLarge,
+                    h2 = type.titleMedium,
+                    h3 = type.titleSmall,
+                    h4 = type.titleSmall,
+                    h5 = type.bodyLarge,
+                    h6 = type.bodyLarge,
+                ),
+                components = components,
+            )
+        }
     }
     if (selectable) SelectionContainer { body() } else body()
 }
@@ -173,7 +197,7 @@ private fun BackTranslationPanel(back: BackTranslationState, onStop: () -> Unit,
             TextButton(onClick = onStop) { Text(stringResource(R.string.action_stop)) }
         }
     }
-    if (back.text.isNotEmpty()) MarkdownText(back.text, selectable)
+    if (back.text.isNotEmpty()) MarkdownText(back.text, selectable, running = back.status == BackStatus.RUNNING)
 
     val note = when (back.status) {
         BackStatus.RUNNING -> if (back.text.isEmpty()) stringResource(R.string.back_running) else null

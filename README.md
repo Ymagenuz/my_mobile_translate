@@ -26,7 +26,9 @@ Pull down the shade and tap **Select on screen**, or press the feature's accessi
 | ¶ Paragraph pen | Tap toggles a whole paragraph. |
 | ▭ Area pen | Drag a rectangle to have the vision model read just that region, for what the scan can't read: Russian, handwriting, stylised text. |
 
-The toolbar also has undo and redo, select all, clear, a reading-order or selection-order toggle, and the scan language (中, A, あ, 한). Drag it by ⠿; it snaps to the nearest side, remembers its place and collapses to a pill. Two fingers pinch and pan the frozen image. Confirm with **Translate** or **Copy**. Closing the result returns to your selection; Back or ✕ returns to the live app.
+The toolbar also has undo and redo, select all, clear, a reading-order or selection-order toggle, and the scan language (中, A, あ, 한). Drag it by either ⠿ in its bottom corners; it snaps to the nearest side, remembers its place and collapses to a pill. Two fingers pinch and pan the frozen image. Confirm with **Translate** or **Copy**, or tap **Edit** to correct what the scan misread before anything is sent. After a translation, **Edit** in the result does the same and translates again. Closing the result returns to your selection; Back or ✕ returns to the live app.
+
+Translations fade in as they stream, as on the desktop. Android's **Remove animations** setting turns this off.
 
 ### One-time setup
 

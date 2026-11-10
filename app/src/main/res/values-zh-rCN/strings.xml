@@ -48,6 +48,7 @@
     <string name="action_try_again">重试</string>
     <string name="action_save">保存</string>
     <string name="action_cancel">取消</string>
+    <string name="action_edit">编辑</string>
     <string name="action_back">返回</string>
     <string name="action_open_settings">打开设置</string>
 

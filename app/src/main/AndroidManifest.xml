@@ -53,6 +53,7 @@
         <activity
             android:name=".entry.PhotoSelectActivity"
             android:exported="false"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@android:style/Theme.Material.NoActionBar" />
 
         <provider
