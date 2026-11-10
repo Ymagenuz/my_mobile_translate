@@ -90,6 +90,15 @@
             android:taskAffinity=""
             android:theme="@style/Theme.SnipDo.Popup" />
 
+        <!-- See-through, like the popup, so the captured app stays below it. -->
+        <activity
+            android:name=".entry.ScreenSelectActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:taskAffinity=""
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.SnipDo.Popup" />
+
         <service
             android:name=".entry.ScreenCaptureService"
             android:exported="false"

@@ -80,14 +80,10 @@ class ScreenCaptureActivity : ComponentActivity() {
                 return@launch
             }
             CapturedScreen.hold(bitmap)
-            val select = Intent(this@ScreenCaptureActivity, PhotoSelectActivity::class.java)
-                .putExtra(PhotoSelectActivity.EXTRA_SCREEN, true)
-                // A task of its own, so Back returns to the app that was captured.
-                .addFlags(
-                    Intent.FLAG_ACTIVITY_NEW_TASK or
-                        Intent.FLAG_ACTIVITY_MULTIPLE_TASK or
-                        Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS,
-                )
+            // In this same see-through task, which isn't in recent apps, so the app that was
+            // captured stays below: opening and leaving it isn't a switch between apps, which
+            // phones animate whatever the app asks.
+            val select = Intent(this@ScreenCaptureActivity, ScreenSelectActivity::class.java)
             // No opening animation, so the screen looks as if it has simply frozen.
             startActivity(select, ActivityOptions.makeCustomAnimation(this@ScreenCaptureActivity, 0, 0).toBundle())
             finish()

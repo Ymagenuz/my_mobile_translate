@@ -37,14 +37,14 @@ class HeldScreenshot : ViewModel() {
 }
 
 /**
- * Opens a photo, or a screenshot just taken with [EXTRA_SCREEN], with the pens. A
- * screenshot fills the whole display, so it looks as if the screen has frozen.
+ * Opens a photo with the pens. [ScreenSelectActivity] opens the screenshot just taken the
+ * same way, filling the whole display so it looks as if the screen has frozen.
  */
-class PhotoSelectActivity : ComponentActivity() {
+open class PhotoSelectActivity : ComponentActivity() {
     private val scanner by lazy { OnDeviceScanner() }
     private val held: HeldScreenshot by viewModels()
     private var selection: SelectionOverlay? = null
-    private var isScreen = false
+    protected open val showsScreenshot = false
 
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(UiLanguage.wrap(newBase))
@@ -55,8 +55,7 @@ class PhotoSelectActivity : ComponentActivity() {
         enableEdgeToEdge()
         onBackPressedDispatcher.addCallback(this) { selection?.onBack() ?: finish() }
 
-        isScreen = intent.getBooleanExtra(EXTRA_SCREEN, false)
-        if (isScreen) {
+        if (showsScreenshot) {
             showScreenshot()
             return
         }
@@ -80,7 +79,7 @@ class PhotoSelectActivity : ComponentActivity() {
     override fun finish() {
         super.finish()
         // Back to the live screen without an animation, as if it has unfrozen.
-        if (isScreen && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        if (showsScreenshot && Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             @Suppress("DEPRECATION")
             overridePendingTransition(0, 0)
         }
@@ -111,8 +110,11 @@ class PhotoSelectActivity : ComponentActivity() {
      * Android's full-screen notice and let edge strokes pull them back.
      */
     private fun coverWholeDisplay(screenshot: Bitmap) {
-        // A turned screen would no longer match the screenshot.
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
+        // A turned screen would no longer match the screenshot. Android 8.0 throws if a
+        // translucent screen asks for an orientation, so it goes without the lock there.
+        if (Build.VERSION.SDK_INT != Build.VERSION_CODES.O) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.attributes = window.attributes.apply {
                 layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
@@ -201,10 +203,14 @@ class PhotoSelectActivity : ComponentActivity() {
             File(cacheDir, "photos/${uri.lastPathSegment}").delete()
         }
     }
+}
 
-    companion object {
-        const val EXTRA_SCREEN = "com.ymagenuz.snipdotranslate.extra.SCREEN"
-    }
+/**
+ * The screenshot just taken, with the pens. Translucent, so the app it came from stays
+ * underneath: opening and closing it then isn't animated as switching between apps.
+ */
+class ScreenSelectActivity : PhotoSelectActivity() {
+    override val showsScreenshot = true
 }
 
 private const val BAR_SAMPLE_DP = 24f
