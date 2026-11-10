@@ -37,8 +37,8 @@ private const val SHEET_MAX_HEIGHT_FRACTION = 0.85f
 private val DISMISS_DRAG_DISTANCE = 96.dp
 
 /**
- * A bottom sheet drawn inside the current window. The library's sheet opens a dialog,
- * which an accessibility overlay can't host, so the popup and the overlay share this one.
+ * A bottom sheet drawn inside the current window, shared by the popup and the selection
+ * screen, so it sits over the image or the app below instead of in a separate dialog.
  * Tapping outside or dragging the handle down dismisses it; the host handles Back.
  */
 @Composable

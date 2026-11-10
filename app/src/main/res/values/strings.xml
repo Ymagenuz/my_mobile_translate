@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">SnipDo Translate</string>
-    <string name="selection_service_label">SnipDo screen selection</string>
-    <string name="selection_service_description">Lets you select words anywhere on your screen to translate them. It only takes a screenshot when you tap the Select on screen tile or this feature\'s shortcut. It can\'t read the content of other apps, and screenshots stay in memory on your phone.</string>
     <string name="tile_select_on_screen">Select on screen</string>
     <string name="tile_translate_clipboard">Translate clipboard</string>
     <string name="action_open_in_app">Open in app</string>
@@ -94,14 +92,10 @@
     <string name="about_check_failed">Couldn\'t check for updates: %1$s</string>
     <string name="settings_update_badge">Settings ⬇</string>
     <string name="settings_selection">Screen selection</string>
-    <string name="settings_selection_on">On. Tap the Select on screen tile in Quick Settings, or the shortcut if you turned it on.</string>
-    <string name="settings_selection_off">Off. It needs a one-time setup:</string>
-    <string name="settings_selection_steps">1. Open Accessibility settings and turn on SnipDo screen selection.\n2. If Android says it\'s a restricted setting, open App info, tap the ⋮ menu, choose Allow restricted settings, and try step 1 again.\n3. Add the Select on screen tile to Quick Settings.</string>
-    <string name="settings_selection_shortcut">Optional: in Accessibility settings, also turn on the SnipDo screen selection shortcut. Its floating button or gesture then starts a selection on any screen, without opening Quick Settings. The tile works without it.</string>
-    <string name="settings_selection_privacy">It can only take a screenshot when you tap the tile or the shortcut, and can\'t read other apps\' content. Screenshots stay in memory on this phone. Nothing is sent until you confirm, and then only the words you selected.</string>
-    <string name="settings_selection_unsupported">Screen selection needs Android 12 or later.</string>
-    <string name="settings_open_accessibility">Accessibility settings</string>
-    <string name="settings_open_app_info">App info</string>
+    <string name="settings_selection_how">Add the Select on screen tile to Quick Settings, then tap it on any screen. Each time, Android asks whether to share the screen with SnipDo: tap Start or Share screen. You can also take a screenshot and share it to SnipDo.</string>
+    <string name="settings_selection_privacy">SnipDo takes one screenshot and stops capturing straight away. The screenshot stays in memory on this phone. Nothing is sent until you confirm, and then only the words you selected.</string>
+    <string name="capture_channel">Screen capture</string>
+    <string name="capture_notification">Capturing the screen for selection</string>
     <string name="settings_add_select_tile">Add Select on screen tile</string>
     <string name="settings_add_clipboard_tile">Add Translate clipboard tile</string>
     <string name="settings_tile_added">Added “%1$s” to Quick Settings. New tiles usually go on the last page. To move it, open Quick Settings and tap the pencil (Edit) button.</string>

@@ -2,20 +2,20 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-The Android counterpart of [SnipDo Translate](https://github.com/Ymagenuz/my_snipdo_translate) for Windows: translation, dictionary lookup and OCR through your own OpenAI-compatible API key, with the same prompts, providers and behaviour. It needs Android 8.0 or later; on-screen selection needs Android 12 or later.
+The Android counterpart of [SnipDo Translate](https://github.com/Ymagenuz/my_snipdo_translate) for Windows: translation, dictionary lookup and OCR through your own OpenAI-compatible API key, with the same prompts, providers and behaviour. It needs Android 8.0 or later, on-screen selection included.
 
 ## Ways to translate
 
 - **Select text in any app**, then choose **SnipDo Translate** from the selection menu. The result opens in a sheet over that app.
 - **Share** text or an image to the app.
 - **Translate clipboard** tile in Quick Settings.
-- **Select on screen** tile or accessibility shortcut: pick words directly from whatever is on the screen.
+- **Select on screen** tile: pick words directly from whatever is on the screen.
 - **Camera** and **Photo** in the app, using the same pens as on-screen selection.
 - Or type in the app. Short terms are looked up in the dictionary automatically.
 
 ## Selecting on the screen
 
-Pull down the shade and tap **Select on screen**, or press the feature's accessibility shortcut if you turned it on. The screen freezes and looks unchanged, apart from a floating toolbar. The text is scanned on the phone, and nothing is shown or sent until you act.
+Pull down the shade and tap **Select on screen**. Android asks whether to share the screen with SnipDo; tap **Start** or **Share screen**. SnipDo takes one screenshot and stops capturing, and the screen then looks frozen, apart from a floating toolbar. The text is scanned on the phone, and nothing is shown or sent until you act. You can also take a screenshot as usual and share it to SnipDo, which opens it with the same pens.
 
 | Tool | What it does |
 |---|---|
@@ -30,20 +30,15 @@ The toolbar also has undo and redo, select all, clear, a reading-order or select
 
 Translations fade in as they stream, as on the desktop. Android's **Remove animations** setting turns this off.
 
-### One-time setup
+### Setup
 
-Screen selection is an Android accessibility service, which lets it capture without asking every time.
+Add the **Select on screen** tile to Quick Settings, from **Settings → Screen selection** in the app or by editing Quick Settings. New tiles usually go on the last page; tap the pencil (Edit) button in Quick Settings to move it.
 
-1. In the app: **Settings → Screen selection → Accessibility settings**, and turn on **SnipDo screen selection**.
-2. Android blocks this for apps installed from outside a store. If it says the setting is restricted, open **App info**, tap the **⋮** menu, choose **Allow restricted settings**, and try step 1 again. The menu varies by phone maker.
-3. Add the **Select on screen** tile to Quick Settings. New tiles usually go on the last page; tap the pencil (Edit) button in Quick Settings to move it.
-4. Optional: on the same accessibility page, turn on the **SnipDo screen selection shortcut**. Its floating button or gesture then starts a selection on any screen without opening Quick Settings.
-
-Some phone makers stop background services to save battery. If the tile stops working, exempt the app in your battery settings.
+That's all. Screen selection uses Android's standard screen-capture permission rather than an accessibility service, so there is nothing to turn on, it works the same on every phone, and clearing SnipDo from recent apps doesn't stop it. Android asks every time, and briefly shows its screen-sharing indicator while SnipDo takes the screenshot.
 
 ## Privacy
 
-- The accessibility service can only take a screenshot, and only when you tap the tile or its shortcut. It's configured so it can't read other apps' content.
+- Screen selection captures only after you tap the tile and allow it in Android's dialog. It takes a single screenshot and stops straight away.
 - Screenshots stay in memory and are never written to storage or history. The scan runs on the phone.
 - Nothing is sent until you confirm, and then only the words you selected. The area pen and **Read with AI** send only that image.
 - API keys are encrypted with a key held in the Android Keystore. Backups and device transfers are turned off.

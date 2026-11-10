@@ -3,6 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Screen selection holds Android's screen-capture permission for one screenshot. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
 
     <application
         android:name=".SnipDoApp"
@@ -77,23 +80,21 @@
             </intent-filter>
         </service>
 
+        <!-- Has no window of its own on screen; it asks to capture the screen below it. -->
+        <activity
+            android:name=".entry.ScreenCaptureActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:taskAffinity=""
+            android:theme="@style/Theme.SnipDo.Popup" />
+
         <service
-            android:name=".select.overlay.SelectionAccessibilityService"
-            android:enabled="@bool/screen_selection_supported"
-            android:exported="true"
-            android:label="@string/selection_service_label"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
-            <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.accessibilityservice"
-                android:resource="@xml/selection_accessibility_service" />
-        </service>
+            android:name=".entry.ScreenCaptureService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
 
         <service
             android:name=".entry.SelectOnScreenTileService"
-            android:enabled="@bool/screen_selection_supported"
             android:exported="true"
             android:icon="@drawable/ic_tile_select"
             android:label="@string/tile_select_on_screen"

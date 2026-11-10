@@ -69,7 +69,6 @@ fun ResultPane(
     state: TranslationState,
     actions: ResultActions,
     modifier: Modifier = Modifier,
-    selectable: Boolean = true,
 ) {
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -93,7 +92,7 @@ fun ResultPane(
         }
 
         if (state.text.isNotEmpty()) {
-            MarkdownText(state.text, selectable, running = state.status == RunStatus.RUNNING)
+            MarkdownText(state.text, running = state.status == RunStatus.RUNNING)
         } else if (state.status == RunStatus.RUNNING) {
             val waiting = if (state.mode == TranslationMode.DICTIONARY) R.string.action_looking_up else R.string.action_translating
             PendingNote(stringResource(waiting), MaterialTheme.colorScheme.tertiary)
@@ -110,7 +109,7 @@ fun ResultPane(
         }
 
         if (state.text.isNotBlank() && state.status != RunStatus.RUNNING) CopyButton(state.text)
-        BackTranslationPanel(state.back, actions.onStopBack, selectable)
+        BackTranslationPanel(state.back, actions.onStopBack)
     }
 }
 
@@ -136,12 +135,11 @@ private class StreamedFlag {
 }
 
 /**
- * [selectable] is off in the overlay, whose window can't host selection handles.
- * Text fades in while [running], and for the last chunk, which arrives as the run ends.
+ * Selectable, so part of a result can be copied. Text fades in while [running], and for the last chunk, which arrives as the run ends.
  * A finished result shown later, such as after rotating, appears at once.
  */
 @Composable
-private fun MarkdownText(text: String, selectable: Boolean, running: Boolean) {
+private fun MarkdownText(text: String, running: Boolean) {
     val type = MaterialTheme.typography
     val streamed = remember { StreamedFlag() }
     if (running) streamed.value = true
@@ -167,7 +165,7 @@ private fun MarkdownText(text: String, selectable: Boolean, running: Boolean) {
             )
         }
     }
-    if (selectable) SelectionContainer { body() } else body()
+    SelectionContainer { body() }
 }
 
 @Composable
@@ -209,7 +207,7 @@ private fun CopyButton(text: String) {
 }
 
 @Composable
-private fun BackTranslationPanel(back: BackTranslationState, onStop: () -> Unit, selectable: Boolean) {
+private fun BackTranslationPanel(back: BackTranslationState, onStop: () -> Unit) {
     if (back.status == BackStatus.HIDDEN) return
 
     Spacer(Modifier.width(4.dp))
@@ -225,7 +223,7 @@ private fun BackTranslationPanel(back: BackTranslationState, onStop: () -> Unit,
         }
     }
     if (back.text.isNotEmpty()) {
-        MarkdownText(back.text, selectable, running = back.status == BackStatus.RUNNING)
+        MarkdownText(back.text, running = back.status == BackStatus.RUNNING)
     } else if (back.status == BackStatus.RUNNING) {
         PendingNote(stringResource(R.string.back_running), MaterialTheme.colorScheme.primary)
     }

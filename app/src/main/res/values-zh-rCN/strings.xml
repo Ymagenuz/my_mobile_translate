@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="selection_service_label">SnipDo 屏幕选词</string>
-    <string name="selection_service_description">让你在屏幕上任意位置选词并翻译。只有在点按“屏幕选词”磁贴或本功能的快捷方式时才会截屏；它无法读取其他应用的内容，截图只保存在手机内存中。</string>
     <string name="tile_select_on_screen">屏幕选词</string>
     <string name="tile_translate_clipboard">翻译剪贴板</string>
     <string name="action_open_in_app">在应用中打开</string>
@@ -83,14 +81,10 @@
 
     <string name="settings_language">界面语言</string>
     <string name="settings_selection">屏幕选词</string>
-    <string name="settings_selection_on">已开启。在快捷设置中点按“屏幕选词”磁贴即可使用；如果开启了快捷方式，也可以用快捷方式。</string>
-    <string name="settings_selection_off">未开启，需要进行一次设置：</string>
-    <string name="settings_selection_steps">1. 打开无障碍设置，开启“SnipDo 屏幕选词”。\n2. 如果系统提示这是受限设置，请打开应用信息，点按 ⋮ 菜单，选择“允许受限设置”，然后重试第 1 步。\n3. 把“屏幕选词”磁贴添加到快捷设置。</string>
-    <string name="settings_selection_shortcut">可选：在无障碍设置中，还可以开启“SnipDo 屏幕选词”的快捷方式。之后在任何界面点按它的悬浮按钮或使用手势即可开始选词，无需打开快捷设置。不开启也可以使用磁贴。</string>
-    <string name="settings_selection_privacy">它只会在你点按磁贴或快捷方式时截屏，无法读取其他应用的内容。截图只保存在手机内存中。在你确认之前不会发送任何内容，确认后也只发送你选中的文字。</string>
-    <string name="settings_selection_unsupported">屏幕选词需要 Android 12 或更高版本。</string>
-    <string name="settings_open_accessibility">无障碍设置</string>
-    <string name="settings_open_app_info">应用信息</string>
+    <string name="settings_selection_how">把“屏幕选词”磁贴添加到快捷设置，然后在任意界面点按它。每次 Android 都会询问是否与 SnipDo 共享屏幕，点按“开始”或“共享屏幕”即可。也可以先截图，再分享给 SnipDo。</string>
+    <string name="settings_selection_privacy">SnipDo 只截取一张图，随即停止截屏。截图只保存在手机内存中。在你确认之前不会发送任何内容，确认后也只发送你选中的文字。</string>
+    <string name="capture_channel">截取屏幕</string>
+    <string name="capture_notification">正在截取屏幕以便选词</string>
     <string name="settings_add_select_tile">添加“屏幕选词”磁贴</string>
     <string name="settings_add_clipboard_tile">添加“翻译剪贴板”磁贴</string>
     <string name="settings_tile_added">已将“%1$s”添加到快捷设置。新磁贴通常在最后一页。如需移动，请打开快捷设置并点按铅笔（编辑）按钮。</string>

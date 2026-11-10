@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color as AndroidColor
-import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -93,15 +92,18 @@ private const val BLACK_LEVEL = 8
 private const val BLACK_SHARE = 0.98f
 private const val AREA_PADDING_PX = 8
 
+/** Where the image came from: the screen just captured, or a photo or screenshot file. */
+enum class ImageSource { SCREEN, PHOTO }
+
 /**
- * A still image with the pens and result sheet: a frozen screen shown over everything
- * else, or a photo in its own screen. [attach] and [detach] put it wherever it belongs.
+ * A still image with the pens and result sheet. [attach] and [detach] put it wherever it
+ * belongs; the host handles Back by calling [onBack].
  */
 class SelectionOverlay(
     private val context: Context,
     private val image: Bitmap,
     private val scanner: OnDeviceScanner,
-    private val isPhoto: Boolean,
+    private val source: ImageSource,
     private val attach: (View) -> Unit,
     private val detach: (View) -> Unit,
     private val onClosed: () -> Unit,
@@ -133,16 +135,7 @@ class SelectionOverlay(
     private var showResult by mutableStateOf(false)
     private var closed = false
 
-    private val root = object : FrameLayout(context) {
-        override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-            // In a photo's own screen, the activity's back handling calls onBack instead.
-            if (!isPhoto && event.keyCode == KeyEvent.KEYCODE_BACK) {
-                if (event.action == KeyEvent.ACTION_UP) onBack()
-                return true
-            }
-            return super.dispatchKeyEvent(event)
-        }
-    }
+    private val root = FrameLayout(context)
 
     fun show() {
         savedStateController.performRestore(null)
@@ -158,11 +151,9 @@ class SelectionOverlay(
         val match = ViewGroup.LayoutParams.MATCH_PARENT
         root.addView(canvas, match, match)
         root.addView(ComposeView(context).apply { setContent { OverlayUi() } }, match, match)
-        root.isFocusableInTouchMode = true
-        if (isPhoto) root.setBackgroundColor(AndroidColor.BLACK)
+        if (source == ImageSource.PHOTO) root.setBackgroundColor(AndroidColor.BLACK)
 
         attach(root)
-        root.requestFocus()
 
         scope.launch {
             val saved = app.settingsStore.current()
@@ -207,7 +198,7 @@ class SelectionOverlay(
             }
             // The status bar is still drawn over a blocked app, so its clock may be read.
             val contentWords = words.filter { it.quad.center.y in contentTop(image)..contentBottom(image) }
-            if (!isPhoto && contentWords.isEmpty() && withContext(Dispatchers.Default) { isBlackedOut(image) }) {
+            if (source == ImageSource.SCREEN && contentWords.isEmpty() && withContext(Dispatchers.Default) { isBlackedOut(image) }) {
                 Toast.makeText(context, R.string.selection_blocked, Toast.LENGTH_LONG).show()
                 close()
                 return@launch
@@ -411,7 +402,7 @@ class SelectionOverlay(
                 onEdit = ::editSelection,
                 onClose = ::close,
                 onMoved = ::savePrefs,
-                onReadWithAi = if (isPhoto) ::readWholeImage else null,
+                onReadWithAi = if (source == ImageSource.PHOTO) ::readWholeImage else null,
             ),
         )
     }
@@ -454,7 +445,6 @@ class SelectionOverlay(
                     if (showResult && state.status != RunStatus.IDLE) {
                         ResultPane(
                             state = state,
-                            selectable = false,
                             actions = ResultActions(
                                 onStop = session::stop,
                                 onRetry = session::retry,

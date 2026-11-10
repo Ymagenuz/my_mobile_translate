@@ -2,6 +2,12 @@
 
 **English** | [简体中文](CHANGELOG.zh-CN.md)
 
+## Unreleased
+
+- Screen selection now uses Android's standard screen-capture permission instead of an accessibility service. Adding the tile is the only setup, it works on Android 8 and later, and clearing SnipDo from recent apps no longer turns it off, as it did on Xiaomi phones. Android asks each time before the screen is captured. The accessibility shortcut and its floating button are gone; share a screenshot to SnipDo for another way in.
+- Part of a result on a selected screen can now be selected and copied.
+- Messages during screen selection, such as **Copied** or **No text found**, now appear. Android used to hide them.
+
 ## 0.1.1 — 2026-11-09
 
 - While a translation or lookup is waiting for its first text, the result shows a spinner with **Translating…** or **Looking up…**. Back-translation shows the same. With Android's **Remove animations** setting on, only the words show.

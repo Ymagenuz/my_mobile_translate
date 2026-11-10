@@ -8,7 +8,6 @@ import android.content.Intent
 import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
-import android.provider.Settings
 import androidx.activity.compose.LocalActivity
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
@@ -60,7 +59,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ymagenuz.snipdotranslate.BuildConfig
 import com.ymagenuz.snipdotranslate.R
@@ -70,7 +68,6 @@ import com.ymagenuz.snipdotranslate.data.UI_LANGUAGE_CHINESE
 import com.ymagenuz.snipdotranslate.data.UI_LANGUAGE_ENGLISH
 import com.ymagenuz.snipdotranslate.entry.SelectOnScreenTileService
 import com.ymagenuz.snipdotranslate.entry.TranslateClipboardTileService
-import com.ymagenuz.snipdotranslate.select.overlay.SelectionAccessibilityService
 import java.io.IOException
 import kotlinx.coroutines.launch
 
@@ -290,32 +287,7 @@ private fun AboutSection(viewModel: MainViewModel) {
 private fun ScreenSelectionSetup() {
     val context = LocalContext.current
     Text(stringResource(R.string.settings_selection), style = MaterialTheme.typography.titleMedium)
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-        Text(stringResource(R.string.settings_selection_unsupported), style = MaterialTheme.typography.bodySmall)
-        return
-    }
-
-    var running by remember { mutableStateOf(false) }
-    LifecycleResumeEffect(Unit) {
-        running = SelectionAccessibilityService.instance != null
-        onPauseOrDispose { }
-    }
-
-    Text(stringResource(if (running) R.string.settings_selection_on else R.string.settings_selection_off))
-    if (!running) Text(stringResource(R.string.settings_selection_steps), style = MaterialTheme.typography.bodySmall)
-    OutlinedButton(onClick = { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }) {
-        Text(stringResource(R.string.settings_open_accessibility))
-    }
-    if (!running) {
-        OutlinedButton(
-            onClick = {
-                context.startActivity(
-                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}")),
-                )
-            },
-        ) { Text(stringResource(R.string.settings_open_app_info)) }
-    }
-    Text(stringResource(R.string.settings_selection_shortcut), style = MaterialTheme.typography.bodySmall)
+    Text(stringResource(R.string.settings_selection_how))
     Text(stringResource(R.string.settings_selection_privacy), style = MaterialTheme.typography.bodySmall)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         var tileStatus by remember { mutableStateOf("") }
