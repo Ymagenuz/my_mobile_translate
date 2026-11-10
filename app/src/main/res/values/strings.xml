@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">SnipDo Translate</string>
+    <string name="selection_service_label">SnipDo screen selection</string>
+    <string name="selection_service_description">Lets you select words anywhere on your screen to translate them, without Android asking each time. It only takes a screenshot when you tap the Select on screen tile or this feature\'s shortcut. It can\'t read the content of other apps, and screenshots stay in memory on your phone.</string>
     <string name="tile_select_on_screen">Select on screen</string>
     <string name="tile_translate_clipboard">Translate clipboard</string>
     <string name="action_open_in_app">Open in app</string>
@@ -102,6 +104,13 @@
     <string name="settings_selection">Screen selection</string>
     <string name="settings_selection_how">Add the Select on screen tile to Quick Settings, then tap it on any screen. Each time, Android asks whether to share the screen with SnipDo: tap Start or Share screen. You can also take a screenshot and share it to SnipDo.</string>
     <string name="settings_selection_privacy">SnipDo takes one screenshot and stops capturing straight away. The screenshot stays in memory on this phone. Nothing is sent until you confirm, and then only the words you selected.</string>
+    <string name="settings_selection_accessibility">Accessibility service (optional)</string>
+    <string name="settings_selection_accessibility_on">On. The tile captures without asking. If you also turned on the SnipDo screen selection shortcut in Accessibility settings, its floating button or gesture starts a selection from any screen.</string>
+    <string name="settings_selection_accessibility_off">Off. Turn on SnipDo screen selection in Accessibility settings and the tile captures without asking. You can also turn on its shortcut there: a floating button or gesture that starts a selection from any screen. Whenever the service is off, the tile asks as above.</string>
+    <string name="settings_selection_accessibility_restricted">If Android says it\'s a restricted setting, open App info, tap the ⋮ menu, choose Allow restricted settings, and try again. Some phones, such as Xiaomi, turn the service off when SnipDo is cleared from recent apps; the tile then asks each time until you turn it back on.</string>
+    <string name="settings_selection_accessibility_privacy">The service can only take a screenshot, only when you tap the tile or its shortcut, and can\'t read other apps\' content.</string>
+    <string name="settings_open_accessibility">Accessibility settings</string>
+    <string name="settings_open_app_info">App info</string>
     <string name="capture_channel">Screen capture</string>
     <string name="capture_notification">Capturing the screen for selection</string>
     <string name="settings_add_select_tile">Add Select on screen tile</string>

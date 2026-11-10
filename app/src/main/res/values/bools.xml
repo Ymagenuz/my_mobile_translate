@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The accessibility way of selecting on screen needs Android 12; the tile works without it. -->
+    <bool name="accessibility_selection_supported">false</bool>
+</resources>

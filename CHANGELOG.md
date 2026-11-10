@@ -2,6 +2,11 @@
 
 **English** | [简体中文](CHANGELOG.zh-CN.md)
 
+## Unreleased
+
+- The accessibility service from 0.1 is back as an option for screen selection, on Android 12 and later. Turn on **SnipDo screen selection** in Accessibility settings and the tile captures straight away without Android asking, and the feature's floating button or gesture starts a selection from any screen. Whenever it isn't running, including after a phone turns it off, the tile asks for screen-capture permission as in 0.2. **Settings → Screen selection** shows whether it's on and links to its setup.
+- The accessibility overlay picks up 0.2's improvements to the selected screen: part of a result can be selected, with an in-overlay menu for **Copy** and **Select all**, and **Edit** gets **Cut** and **Paste**, none of which opened over the overlay in 0.1. Messages such as **Copied** or **No text found** show inside it, where Android hid them in 0.1. The status and navigation bars aren't scanned any more, so **Select all** no longer picks up the clock. Dismissing a result returns to the app, and **Select again** goes back to the pens, as on the screen-capture way.
+
 ## 0.2.0 — 2026-11-10
 
 - Screen selection now uses Android's standard screen-capture permission instead of an accessibility service. Adding the tile is the only setup, it works on Android 8 and later, and clearing SnipDo from recent apps no longer turns it off, as it did on Xiaomi phones. Android asks each time before the screen is captured. The accessibility shortcut and its floating button are gone; share a screenshot to SnipDo for another way in.

@@ -6,12 +6,16 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color as AndroidColor
+import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.annotation.StringRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -39,10 +44,15 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.Insets
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -66,6 +76,7 @@ import com.ymagenuz.snipdotranslate.ocr.VisionResult
 import com.ymagenuz.snipdotranslate.ocr.readImageWithVision
 import com.ymagenuz.snipdotranslate.select.core.AreaRect
 import com.ymagenuz.snipdotranslate.select.core.Pen
+import com.ymagenuz.snipdotranslate.select.core.ScreenWord
 import com.ymagenuz.snipdotranslate.select.core.SelectionModel
 import com.ymagenuz.snipdotranslate.select.core.WordOrder
 import com.ymagenuz.snipdotranslate.select.core.center
@@ -81,6 +92,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -97,7 +109,11 @@ enum class ImageSource { SCREEN, PHOTO }
 
 /**
  * A still image with the pens and result sheet. [attach] and [detach] put it wherever it
- * belongs; the host handles Back by calling [onBack].
+ * belongs. In an activity, the host handles Back by calling [onBack]. [inOverlayWindow] is
+ * true in the accessibility service's overlay, which handles Back itself, and where Android
+ * would hide toasts and can't open its text toolbar, so both are drawn inside it instead.
+ * [barInsets] are the parts of a screenshot under the status and navigation bars; words there,
+ * such as the clock, are left out of the scan.
  */
 class SelectionOverlay(
     private val context: Context,
@@ -107,6 +123,8 @@ class SelectionOverlay(
     private val attach: (View) -> Unit,
     private val detach: (View) -> Unit,
     private val onClosed: () -> Unit,
+    private val inOverlayWindow: Boolean = false,
+    private val barInsets: Insets = Insets.NONE,
 ) : LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner {
     private val app = context.applicationContext as SnipDoApp
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -133,9 +151,20 @@ class SelectionOverlay(
     private var draft by mutableStateOf(TextFieldValue())
     // Off while editing a fresh selection, so an earlier result doesn't show under it.
     private var showResult by mutableStateOf(false)
+    // A message shown inside the overlay window, where a toast would be hidden under it.
+    private var notice by mutableStateOf<Notice?>(null)
     private var closed = false
 
-    private val root = FrameLayout(context)
+    private val root = object : FrameLayout(context) {
+        override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+            // An activity calls onBack from its own back handling instead.
+            if (inOverlayWindow && event.keyCode == KeyEvent.KEYCODE_BACK) {
+                if (event.action == KeyEvent.ACTION_UP) onBack()
+                return true
+            }
+            return super.dispatchKeyEvent(event)
+        }
+    }
 
     fun show() {
         savedStateController.performRestore(null)
@@ -152,8 +181,11 @@ class SelectionOverlay(
         root.addView(canvas, match, match)
         root.addView(ComposeView(context).apply { setContent { OverlayUi() } }, match, match)
         if (source == ImageSource.PHOTO) root.setBackgroundColor(AndroidColor.BLACK)
+        // Receives the Back key in the overlay window.
+        if (inOverlayWindow) root.isFocusableInTouchMode = true
 
         attach(root)
+        if (inOverlayWindow) root.requestFocus()
 
         scope.launch {
             val saved = app.settingsStore.current()
@@ -188,24 +220,41 @@ class SelectionOverlay(
         scanJob?.cancel()
         scanJob = scope.launch {
             val words = try {
-                inReadingOrder(scanner.scan(image, script))
+                inReadingOrder(scanner.scan(image, script).filterNot(::underBars))
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (_: Exception) {
                 // The area pen still works without the on-device scan.
-                Toast.makeText(context, R.string.selection_scan_failed, Toast.LENGTH_LONG).show()
+                tell(R.string.selection_scan_failed, long = true)
                 emptyList()
             }
             // The status bar is still drawn over a blocked app, so its clock may be read.
             val contentWords = words.filter { it.quad.center.y in contentTop(image)..contentBottom(image) }
             if (source == ImageSource.SCREEN && contentWords.isEmpty() && withContext(Dispatchers.Default) { isBlackedOut(image) }) {
+                // A toast, which shows once the selection has closed, even over the overlay window.
                 Toast.makeText(context, R.string.selection_blocked, Toast.LENGTH_LONG).show()
                 close()
                 return@launch
             }
             toolbar.scanning = false
             model = SelectionModel(words, TAP_TOLERANCE_DP * density, DRAG_SLOP_DP * density).also(canvas::setModel)
-            if (words.isEmpty()) Toast.makeText(context, R.string.selection_no_text, Toast.LENGTH_LONG).show()
+            if (words.isEmpty()) tell(R.string.selection_no_text, long = true)
+        }
+    }
+
+    /** Whether a word is in the captured status or navigation bar, like the clock or a carrier name. */
+    private fun underBars(word: ScreenWord): Boolean {
+        val center = word.quad.center
+        return center.y < barInsets.top || center.y > image.height - barInsets.bottom ||
+            center.x < barInsets.left || center.x > image.width - barInsets.right
+    }
+
+    /** A short message while the selection stays open, as a toast or inside the overlay window. */
+    private fun tell(@StringRes text: Int, long: Boolean = false) {
+        if (inOverlayWindow) {
+            notice = Notice(context.getString(text), if (long) NOTICE_LONG_MS else NOTICE_SHORT_MS)
+        } else {
+            Toast.makeText(context, text, if (long) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -255,7 +304,7 @@ class SelectionOverlay(
         if (text.isEmpty()) return
         val clipboard = context.getSystemService(ClipboardManager::class.java)
         clipboard.setPrimaryClip(ClipData.newPlainText("selection", text))
-        Toast.makeText(context, R.string.action_copied, Toast.LENGTH_SHORT).show()
+        tell(R.string.action_copied)
     }
 
     private fun translate(text: String) {
@@ -384,10 +433,37 @@ class SelectionOverlay(
     @Composable
     private fun OverlayUi() {
         SnipDoTheme {
-            Box(Modifier.fillMaxSize()) {
-                if (sheetVisible) ResultSheet() else Toolbar()
+            val screen: @Composable () -> Unit = {
+                Box(Modifier.fillMaxSize()) {
+                    if (sheetVisible) ResultSheet() else Toolbar()
+                    notice?.let { NoticeBubble(it) }
+                }
             }
+            if (inOverlayWindow) InWindowTextMenu(screen) else screen()
         }
+    }
+
+    /** Looks like a toast, and like one lets touches through to whatever is under it. */
+    @Composable
+    private fun BoxScope.NoticeBubble(shown: Notice) {
+        LaunchedEffect(shown) {
+            delay(shown.durationMs)
+            if (notice === shown) notice = null
+        }
+        Text(
+            shown.text,
+            color = MaterialTheme.colorScheme.inverseOnSurface,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(start = 24.dp, end = 24.dp, bottom = 72.dp)
+                .background(MaterialTheme.colorScheme.inverseSurface, RoundedCornerShape(50))
+                .padding(horizontal = 16.dp, vertical = 10.dp)
+                // Read out by screen readers, as a toast would be.
+                .semantics { liveRegion = LiveRegionMode.Polite },
+        )
     }
 
     @Composable
@@ -498,6 +574,13 @@ class SelectionOverlay(
         }
     }
 }
+
+/** A new instance for each message, so the same text shown again starts its time again. */
+private class Notice(val text: String, val durationMs: Long)
+
+// As long as Android shows a short or long toast.
+private const val NOTICE_SHORT_MS = 2000L
+private const val NOTICE_LONG_MS = 3500L
 
 private fun contentTop(image: Bitmap): Float = image.height / 8f
 

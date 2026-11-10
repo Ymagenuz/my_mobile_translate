@@ -38,7 +38,8 @@ private val DISMISS_DRAG_DISTANCE = 96.dp
 
 /**
  * A bottom sheet drawn inside the current window, shared by the popup and the selection
- * screen, so it sits over the image or the app below instead of in a separate dialog.
+ * screen, so it sits over the image or the app below instead of in a separate dialog. The
+ * library's sheet opens a dialog, which the accessibility overlay couldn't host either.
  * Tapping outside or dragging the handle down dismisses it; the host handles Back.
  */
 @Composable

@@ -61,6 +61,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ymagenuz.snipdotranslate.BuildConfig
 import com.ymagenuz.snipdotranslate.R
@@ -70,6 +71,7 @@ import com.ymagenuz.snipdotranslate.data.UI_LANGUAGE_CHINESE
 import com.ymagenuz.snipdotranslate.data.UI_LANGUAGE_ENGLISH
 import com.ymagenuz.snipdotranslate.entry.SelectOnScreenTileService
 import com.ymagenuz.snipdotranslate.entry.TranslateClipboardTileService
+import com.ymagenuz.snipdotranslate.select.overlay.SelectionAccessibilityService
 import com.ymagenuz.snipdotranslate.update.UpdateInstaller
 import java.io.IOException
 import kotlinx.coroutines.launch
@@ -359,6 +361,50 @@ private fun ScreenSelectionSetup() {
             },
         ) { Text(stringResource(R.string.settings_add_clipboard_tile)) }
         if (tileStatus.isNotEmpty()) Text(tileStatus, color = MaterialTheme.colorScheme.primary)
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) AccessibilitySelectionSetup()
+}
+
+/** The optional accessibility service, which captures without asking and adds a shortcut. */
+@RequiresApi(Build.VERSION_CODES.S)
+@Composable
+private fun AccessibilitySelectionSetup() {
+    val context = LocalContext.current
+    var running by remember { mutableStateOf(false) }
+    // Checked again on return from Accessibility settings.
+    LifecycleResumeEffect(Unit) {
+        running = SelectionAccessibilityService.isRunning
+        onPauseOrDispose { }
+    }
+
+    Text(stringResource(R.string.settings_selection_accessibility), style = MaterialTheme.typography.titleSmall)
+    Text(stringResource(if (running) R.string.settings_selection_accessibility_on else R.string.settings_selection_accessibility_off))
+    if (!running) {
+        Text(stringResource(R.string.settings_selection_accessibility_restricted), style = MaterialTheme.typography.bodySmall)
+    }
+    Text(stringResource(R.string.settings_selection_accessibility_privacy), style = MaterialTheme.typography.bodySmall)
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(onClick = { openSettingsPage(context, Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }) {
+            Text(stringResource(R.string.settings_open_accessibility))
+        }
+        if (!running) {
+            OutlinedButton(
+                onClick = {
+                    openSettingsPage(
+                        context,
+                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}")),
+                    )
+                },
+            ) { Text(stringResource(R.string.settings_open_app_info)) }
+        }
+    }
+}
+
+private fun openSettingsPage(context: Context, intent: Intent) {
+    try {
+        context.startActivity(intent)
+    } catch (_: ActivityNotFoundException) {
+        // A phone without that settings page; there's nothing else to open.
     }
 }
 
