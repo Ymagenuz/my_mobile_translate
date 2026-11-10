@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
@@ -35,6 +36,9 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -49,7 +53,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -78,115 +84,142 @@ fun SettingsScreen(viewModel: MainViewModel, onBack: () -> Unit) {
     var status by remember { mutableStateOf("") }
     var fetching by remember { mutableStateOf(false) }
     var models by remember { mutableStateOf<List<String>?>(null) }
+    val snackbar = remember { SnackbarHostState() }
+    val focus = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(Unit) {
         drafts.putAll(viewModel.loadDrafts())
         selected = viewModel.settings.value.apiProvider
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeDrawingPadding()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = onBack) { Text(stringResource(R.string.action_back)) }
-            Text(stringResource(R.string.title_settings), style = MaterialTheme.typography.titleLarge)
-        }
-
-        LanguagePicker(settings.uiLanguage, viewModel::setUiLanguage)
-        AboutSection(viewModel)
-        ScreenSelectionSetup()
-
-        Text(stringResource(R.string.settings_translation), style = MaterialTheme.typography.titleMedium)
-        SwitchRow(stringResource(R.string.settings_back_translation), settings.backTranslation, viewModel::setBackTranslation)
-
-        Text(stringResource(R.string.settings_api), style = MaterialTheme.typography.titleMedium)
-        Text(stringResource(R.string.settings_api_hint), style = MaterialTheme.typography.bodySmall)
-        ProviderPicker(selected) {
-            selected = it
-            status = ""
-        }
-
-        val draft = drafts[selected] ?: return@Column
-        val provider = apiProvider(selected)
-        fun change(update: (ApiDraft) -> ApiDraft) {
-            drafts[selected] = update(drafts.getValue(selected))
-            status = ""
-        }
-
-        OutlinedTextField(
-            value = draft.baseUrl,
-            onValueChange = { value -> change { it.copy(baseUrl = value) } },
-            label = { Text(stringResource(R.string.settings_base_url)) },
-            readOnly = !provider.baseUrlEditable,
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        OutlinedTextField(
-            value = draft.apiKey,
-            onValueChange = { value -> change { it.copy(apiKey = value) } },
-            label = { Text(stringResource(R.string.settings_api_key)) },
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        OutlinedTextField(
-            value = draft.model,
-            onValueChange = { value -> change { it.copy(model = value) } },
-            label = { Text(stringResource(R.string.settings_model)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        OutlinedButton(
-            enabled = !fetching,
-            onClick = {
-                if (draft.apiKey.isBlank()) {
-                    status = resources.getString(R.string.settings_need_key_for_models)
-                    return@OutlinedButton
-                }
-                fetching = true
-                scope.launch {
-                    try {
-                        models = viewModel.fetchModels(selected, draft)
-                    } catch (failure: IOException) {
-                        status = failure.message.orEmpty()
-                    } catch (failure: IllegalArgumentException) {
-                        status = failure.message.orEmpty()
-                    }
-                    fetching = false
-                }
-            },
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .safeDrawingPadding()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(stringResource(if (fetching) R.string.settings_fetching else R.string.settings_fetch_models))
-        }
-        SwitchRow(stringResource(R.string.settings_vision), draft.supportsVision) { value ->
-            change { it.copy(supportsVision = value) }
-        }
-        SwitchRow(stringResource(R.string.settings_disable_thinking), draft.disableThinking) { value ->
-            change { it.copy(disableThinking = value) }
-        }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextButton(onClick = onBack) { Text(stringResource(R.string.action_back)) }
+                Text(stringResource(R.string.title_settings), style = MaterialTheme.typography.titleLarge)
+            }
 
-        Button(
-            onClick = {
-                scope.launch {
-                    status = when (val result = viewModel.saveApi(selected, drafts.toMap())) {
-                        SaveResult.Saved -> resources.getString(R.string.settings_saved)
-                        is SaveResult.InvalidConfig ->
-                            resources.getString(R.string.settings_invalid_config, result.providerName)
-                        is SaveResult.InvalidKey ->
-                            resources.getString(R.string.settings_invalid_key, result.providerName)
-                        SaveResult.KeyNotSaved -> resources.getString(R.string.settings_key_not_saved)
+            LanguagePicker(settings.uiLanguage, viewModel::setUiLanguage)
+            AboutSection(viewModel)
+            ScreenSelectionSetup()
+
+            Text(stringResource(R.string.settings_translation), style = MaterialTheme.typography.titleMedium)
+            SwitchRow(stringResource(R.string.settings_back_translation), settings.backTranslation, viewModel::setBackTranslation)
+
+            Text(stringResource(R.string.settings_api), style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.settings_api_hint), style = MaterialTheme.typography.bodySmall)
+            ProviderPicker(selected) {
+                selected = it
+                status = ""
+            }
+
+            val draft = drafts[selected] ?: return@Column
+            val provider = apiProvider(selected)
+            fun change(update: (ApiDraft) -> ApiDraft) {
+                drafts[selected] = update(drafts.getValue(selected))
+                status = ""
+            }
+
+            OutlinedTextField(
+                value = draft.baseUrl,
+                onValueChange = { value -> change { it.copy(baseUrl = value) } },
+                label = { Text(stringResource(R.string.settings_base_url)) },
+                readOnly = !provider.baseUrlEditable,
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedTextField(
+                value = draft.apiKey,
+                onValueChange = { value -> change { it.copy(apiKey = value) } },
+                label = { Text(stringResource(R.string.settings_api_key)) },
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedTextField(
+                value = draft.model,
+                onValueChange = { value -> change { it.copy(model = value) } },
+                label = { Text(stringResource(R.string.settings_model)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedButton(
+                enabled = !fetching,
+                onClick = {
+                    if (draft.apiKey.isBlank()) {
+                        status = resources.getString(R.string.settings_need_key_for_models)
+                        return@OutlinedButton
                     }
-                }
-            },
-        ) { Text(stringResource(R.string.action_save)) }
+                    fetching = true
+                    scope.launch {
+                        try {
+                            models = viewModel.fetchModels(selected, draft)
+                        } catch (failure: IOException) {
+                            status = failure.message.orEmpty()
+                        } catch (failure: IllegalArgumentException) {
+                            status = failure.message.orEmpty()
+                        }
+                        fetching = false
+                    }
+                },
+            ) {
+                Text(stringResource(if (fetching) R.string.settings_fetching else R.string.settings_fetch_models))
+            }
+            SwitchRow(stringResource(R.string.settings_vision), draft.supportsVision) { value ->
+                change { it.copy(supportsVision = value) }
+            }
+            SwitchRow(stringResource(R.string.settings_disable_thinking), draft.disableThinking) { value ->
+                change { it.copy(disableThinking = value) }
+            }
 
-        if (status.isNotEmpty()) Text(status, style = MaterialTheme.typography.bodyMedium)
+            Button(
+                onClick = {
+                    // The keyboard would cover the confirmation.
+                    focus.clearFocus()
+                    keyboard?.hide()
+                    status = ""
+                    scope.launch {
+                        val result = viewModel.saveApi(selected, drafts.toMap())
+                        val message = when (result) {
+                            SaveResult.Saved -> resources.getString(R.string.settings_saved)
+                            is SaveResult.InvalidConfig ->
+                                resources.getString(R.string.settings_invalid_config, result.providerName)
+                            is SaveResult.InvalidKey ->
+                                resources.getString(R.string.settings_invalid_key, result.providerName)
+                            SaveResult.KeyNotSaved -> resources.getString(R.string.settings_key_not_saved)
+                        }
+                        val saved = result == SaveResult.Saved
+                        snackbar.currentSnackbarData?.dismiss()
+                        snackbar.showSnackbar(
+                            message = message,
+                            withDismissAction = !saved,
+                            duration = if (saved) SnackbarDuration.Short else SnackbarDuration.Long,
+                        )
+                    }
+                },
+            ) { Text(stringResource(R.string.action_save)) }
+
+            if (status.isNotEmpty()) Text(status, style = MaterialTheme.typography.bodyMedium)
+            // Room to scroll Save above the confirmation that appears at the bottom.
+            Spacer(Modifier.height(72.dp))
+        }
+
+        SnackbarHost(
+            hostState = snackbar,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .safeDrawingPadding()
+                .padding(16.dp),
+        )
     }
 
     models?.let { list ->
@@ -269,11 +302,11 @@ private fun ScreenSelectionSetup() {
     }
 
     Text(stringResource(if (running) R.string.settings_selection_on else R.string.settings_selection_off))
+    if (!running) Text(stringResource(R.string.settings_selection_steps), style = MaterialTheme.typography.bodySmall)
+    OutlinedButton(onClick = { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }) {
+        Text(stringResource(R.string.settings_open_accessibility))
+    }
     if (!running) {
-        Text(stringResource(R.string.settings_selection_steps), style = MaterialTheme.typography.bodySmall)
-        OutlinedButton(onClick = { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }) {
-            Text(stringResource(R.string.settings_open_accessibility))
-        }
         OutlinedButton(
             onClick = {
                 context.startActivity(
@@ -282,29 +315,50 @@ private fun ScreenSelectionSetup() {
             },
         ) { Text(stringResource(R.string.settings_open_app_info)) }
     }
+    Text(stringResource(R.string.settings_selection_shortcut), style = MaterialTheme.typography.bodySmall)
     Text(stringResource(R.string.settings_selection_privacy), style = MaterialTheme.typography.bodySmall)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        var tileStatus by remember { mutableStateOf("") }
         OutlinedButton(
             onClick = {
-                requestTile(context, SelectOnScreenTileService::class.java, R.string.tile_select_on_screen, R.drawable.ic_tile_select)
+                tileStatus = ""
+                requestTile(context, SelectOnScreenTileService::class.java, R.string.tile_select_on_screen, R.drawable.ic_tile_select) {
+                    tileStatus = it
+                }
             },
         ) { Text(stringResource(R.string.settings_add_select_tile)) }
         OutlinedButton(
             onClick = {
-                requestTile(context, TranslateClipboardTileService::class.java, R.string.tile_translate_clipboard, R.drawable.ic_tile_translate)
+                tileStatus = ""
+                requestTile(context, TranslateClipboardTileService::class.java, R.string.tile_translate_clipboard, R.drawable.ic_tile_translate) {
+                    tileStatus = it
+                }
             },
         ) { Text(stringResource(R.string.settings_add_clipboard_tile)) }
+        if (tileStatus.isNotEmpty()) Text(tileStatus, color = MaterialTheme.colorScheme.primary)
     }
 }
 
+/** Asks Android to add a tile, then reports what happened, since it often shows nothing itself. */
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-private fun requestTile(context: Context, service: Class<*>, label: Int, icon: Int) {
+private fun requestTile(context: Context, service: Class<*>, label: Int, icon: Int, onResult: (String) -> Unit) {
+    val name = context.getString(label)
     context.getSystemService(StatusBarManager::class.java).requestAddTileService(
         ComponentName(context, service),
-        context.getString(label),
+        name,
         Icon.createWithResource(context, icon),
         context.mainExecutor,
-    ) { }
+    ) { result ->
+        onResult(
+            when (result) {
+                StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ADDED -> context.getString(R.string.settings_tile_added, name)
+                StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ALREADY_ADDED ->
+                    context.getString(R.string.settings_tile_already_added, name)
+                // Declined, or this phone doesn't let apps ask.
+                else -> context.getString(R.string.settings_tile_not_added, name)
+            },
+        )
+    }
 }
 
 @Composable

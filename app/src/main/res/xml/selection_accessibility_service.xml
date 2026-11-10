@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- flagRequestAccessibilityButton makes the feature's shortcut (floating button or gesture)
+     start a selection. Without it, pressing the shortcut would switch the service off. -->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagRequestAccessibilityButton"
     android:canRetrieveWindowContent="false"
     android:canTakeScreenshot="true"
     android:description="@string/selection_service_description"

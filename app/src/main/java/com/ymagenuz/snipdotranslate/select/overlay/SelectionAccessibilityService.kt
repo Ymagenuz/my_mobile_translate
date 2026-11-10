@@ -1,5 +1,6 @@
 package com.ymagenuz.snipdotranslate.select.overlay
 
+import android.accessibilityservice.AccessibilityButtonController
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
 import android.graphics.Bitmap
@@ -32,12 +33,25 @@ class SelectionAccessibilityService : AccessibilityService() {
     private var captureJob: Job? = null
     private var overlay: SelectionOverlay? = null
 
+    /** The feature's accessibility shortcut: its floating button or gesture. */
+    private val shortcut = object : AccessibilityButtonController.AccessibilityButtonCallback() {
+        override fun onClicked(controller: AccessibilityButtonController) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+            // A gesture or volume-key shortcut can be used again while selecting, so it closes
+            // the selection. The floating button is under the selection and can't be pressed.
+            val open = overlay
+            if (open != null) open.close() else startScan(fromShade = false)
+        }
+    }
+
     override fun onServiceConnected() {
         instance = this
+        accessibilityButtonController.registerAccessibilityButtonCallback(shortcut)
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
         instance = null
+        accessibilityButtonController.unregisterAccessibilityButtonCallback(shortcut)
         return super.onUnbind(intent)
     }
 
@@ -59,16 +73,22 @@ class SelectionAccessibilityService : AccessibilityService() {
         overlay?.close()
     }
 
+    /** [fromShade] is true when started from the tile, so the shade has to close first. */
     @RequiresApi(Build.VERSION_CODES.S)
-    fun startScan() {
+    fun startScan(fromShade: Boolean = true) {
         if (captureJob?.isActive == true || overlay != null) return
         captureJob = scope.launch {
-            val shadeClosed = SelectOnScreenTileService.expectShadeClosed()
-            performGlobalAction(GLOBAL_ACTION_DISMISS_NOTIFICATION_SHADE)
-            // A fixed delay would catch the closing animation on slower phones. The tile
-            // stops listening as the shade finishes closing; the timeout covers phones that don't say.
-            withTimeoutOrNull(SHADE_CLOSE_TIMEOUT_MS) { shadeClosed.await() }
-            delay(SHADE_SETTLE_MS)
+            if (fromShade) {
+                val shadeClosed = SelectOnScreenTileService.expectShadeClosed()
+                performGlobalAction(GLOBAL_ACTION_DISMISS_NOTIFICATION_SHADE)
+                // A fixed delay would catch the closing animation on slower phones. The tile
+                // stops listening as the shade finishes closing; the timeout covers phones that don't say.
+                withTimeoutOrNull(SHADE_CLOSE_TIMEOUT_MS) { shadeClosed.await() }
+                delay(SHADE_SETTLE_MS)
+            } else {
+                // Lets the button's press effect or the gesture's animation finish first.
+                delay(SHORTCUT_SETTLE_MS)
+            }
 
             val bitmap = captureScreen()
             if (bitmap == null) {
@@ -130,6 +150,7 @@ class SelectionAccessibilityService : AccessibilityService() {
     companion object {
         private const val SHADE_CLOSE_TIMEOUT_MS = 1100L
         private const val SHADE_SETTLE_MS = 60L
+        private const val SHORTCUT_SETTLE_MS = 150L
 
         @Volatile
         var instance: SelectionAccessibilityService? = null

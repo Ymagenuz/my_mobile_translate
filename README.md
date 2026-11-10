@@ -9,13 +9,13 @@ The Android counterpart of [SnipDo Translate](https://github.com/Ymagenuz/my_sni
 - **Select text in any app**, then choose **SnipDo Translate** from the selection menu. The result opens in a sheet over that app.
 - **Share** text or an image to the app.
 - **Translate clipboard** tile in Quick Settings.
-- **Select on screen** tile: pick words directly from whatever is on the screen.
+- **Select on screen** tile or accessibility shortcut: pick words directly from whatever is on the screen.
 - **Camera** and **Photo** in the app, using the same pens as on-screen selection.
 - Or type in the app. Short terms are looked up in the dictionary automatically.
 
 ## Selecting on the screen
 
-Pull down the shade and tap **Select on screen**. The screen freezes and looks unchanged, apart from a floating toolbar. The text is scanned on the phone, and nothing is shown or sent until you act.
+Pull down the shade and tap **Select on screen**, or press the feature's accessibility shortcut if you turned it on. The screen freezes and looks unchanged, apart from a floating toolbar. The text is scanned on the phone, and nothing is shown or sent until you act.
 
 | Tool | What it does |
 |---|---|
@@ -34,13 +34,14 @@ Screen selection is an Android accessibility service, which lets it capture with
 
 1. In the app: **Settings → Screen selection → Accessibility settings**, and turn on **SnipDo screen selection**.
 2. Android blocks this for apps installed from outside a store. If it says the setting is restricted, open **App info**, tap the **⋮** menu, choose **Allow restricted settings**, and try step 1 again. The menu varies by phone maker.
-3. Add the **Select on screen** tile to Quick Settings.
+3. Add the **Select on screen** tile to Quick Settings. New tiles usually go on the last page; tap the pencil (Edit) button in Quick Settings to move it.
+4. Optional: on the same accessibility page, turn on the **SnipDo screen selection shortcut**. Its floating button or gesture then starts a selection on any screen without opening Quick Settings.
 
 Some phone makers stop background services to save battery. If the tile stops working, exempt the app in your battery settings.
 
 ## Privacy
 
-- The accessibility service can only take a screenshot, and only when you tap the tile. It's configured so it can't read other apps' content.
+- The accessibility service can only take a screenshot, and only when you tap the tile or its shortcut. It's configured so it can't read other apps' content.
 - Screenshots stay in memory and are never written to storage or history. The scan runs on the phone.
 - Nothing is sent until you confirm, and then only the words you selected. The area pen and **Read with AI** send only that image.
 - API keys are encrypted with a key held in the Android Keystore. Backups and device transfers are turned off.
