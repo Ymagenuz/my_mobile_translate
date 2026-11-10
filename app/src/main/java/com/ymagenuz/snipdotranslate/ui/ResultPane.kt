@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -25,8 +27,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownTypography
@@ -86,7 +92,12 @@ fun ResultPane(
             }
         }
 
-        if (state.text.isNotEmpty()) MarkdownText(state.text, selectable, running = state.status == RunStatus.RUNNING)
+        if (state.text.isNotEmpty()) {
+            MarkdownText(state.text, selectable, running = state.status == RunStatus.RUNNING)
+        } else if (state.status == RunStatus.RUNNING) {
+            val waiting = if (state.mode == TranslationMode.DICTIONARY) R.string.action_looking_up else R.string.action_translating
+            PendingNote(stringResource(waiting), MaterialTheme.colorScheme.tertiary)
+        }
 
         when (state.status) {
             RunStatus.STOPPED -> Text(
@@ -100,6 +111,22 @@ fun ResultPane(
 
         if (state.text.isNotBlank() && state.status != RunStatus.RUNNING) CopyButton(state.text)
         BackTranslationPanel(state.back, actions.onStopBack, selectable)
+    }
+}
+
+/** Says what an empty result is waiting for, as the desktop's empty result box does. */
+@Composable
+private fun PendingNote(text: String, color: Color) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+    ) {
+        // With Android's "Remove animations" the spinner would stand still and look stuck.
+        if (ValueAnimator.areAnimatorsEnabled()) {
+            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = color, strokeWidth = 2.dp)
+        }
+        Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
     }
 }
 
@@ -197,10 +224,13 @@ private fun BackTranslationPanel(back: BackTranslationState, onStop: () -> Unit,
             TextButton(onClick = onStop) { Text(stringResource(R.string.action_stop)) }
         }
     }
-    if (back.text.isNotEmpty()) MarkdownText(back.text, selectable, running = back.status == BackStatus.RUNNING)
+    if (back.text.isNotEmpty()) {
+        MarkdownText(back.text, selectable, running = back.status == BackStatus.RUNNING)
+    } else if (back.status == BackStatus.RUNNING) {
+        PendingNote(stringResource(R.string.back_running), MaterialTheme.colorScheme.primary)
+    }
 
     val note = when (back.status) {
-        BackStatus.RUNNING -> if (back.text.isEmpty()) stringResource(R.string.back_running) else null
         BackStatus.STOPPED -> stringResource(R.string.back_stopped)
         BackStatus.NO_KEY -> stringResource(R.string.back_no_key)
         BackStatus.SAME_LANGUAGE -> stringResource(R.string.back_same_language)

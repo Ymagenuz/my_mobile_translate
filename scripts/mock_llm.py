@@ -15,6 +15,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 FAST_DELAY = 0.05
 SLOW_DELAY = 1.0
 STREAM_DELAY = 0.06
+# How long "SIMULATE WAIT" stays silent first, like a model that thinks before it answers.
+FIRST_CHUNK_WAIT = 6.0
 STREAM_TEXT = (
     "## 流式译文\n\n"
     "敏捷的棕色狐狸跳过了那只懒狗。这句话包含了英文字母表中的每一个字母，常用于测试字体和键盘。\n\n"
@@ -85,6 +87,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Connection", "close")
         self.end_headers()
         try:
+            if "SIMULATE WAIT" in prompt:
+                self.wfile.flush()
+                time.sleep(FIRST_CHUNK_WAIT)
             for chunk in chunks:
                 event = {"choices": [{"delta": {"content": chunk}}]}
                 self.wfile.write(f"data: {json.dumps(event, ensure_ascii=False)}\n\n".encode())
