@@ -14,6 +14,7 @@ import com.ymagenuz.snipdotranslate.core.HistoryEntry
 import com.ymagenuz.snipdotranslate.core.ReleaseInfo
 import com.ymagenuz.snipdotranslate.core.TranslationMode
 import com.ymagenuz.snipdotranslate.core.apiProvider
+import com.ymagenuz.snipdotranslate.core.isDownloadableRelease
 import com.ymagenuz.snipdotranslate.core.isPlaceholderApiKey
 import com.ymagenuz.snipdotranslate.core.isUpdateCheckDue
 import com.ymagenuz.snipdotranslate.core.prepareSecretForWrite
@@ -22,10 +23,16 @@ import com.ymagenuz.snipdotranslate.core.validatedProviderConfig
 import com.ymagenuz.snipdotranslate.data.AppSettings
 import com.ymagenuz.snipdotranslate.data.KeyVaultException
 import com.ymagenuz.snipdotranslate.domain.TranslationRequest
+import com.ymagenuz.snipdotranslate.update.UpdateInstaller
+import java.io.File
 import java.io.IOException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** What the user is editing for one provider, kept when switching between providers. */
 data class ApiDraft(
@@ -46,6 +53,20 @@ sealed interface UpdateStatus {
     data object Finished : UpdateStatus
 
     data class Failed(val message: String) : UpdateStatus
+}
+
+/** An in-app update download, from tapping Update now to handing it to Android's installer. */
+sealed interface DownloadState {
+    data object Idle : DownloadState
+
+    data class Downloading(val percent: Int) : DownloadState
+
+    data class Ready(val file: File) : DownloadState
+
+    data class Failed(val message: String) : DownloadState
+
+    // The file downloaded and matched its checksum but isn't a newer build of this app.
+    data object Rejected : DownloadState
 }
 
 sealed interface SaveResult {
@@ -74,9 +95,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         private set
     var updateStatus by mutableStateOf<UpdateStatus>(UpdateStatus.Idle)
         private set
+    var download by mutableStateOf<DownloadState>(DownloadState.Idle)
+        private set
+    private var downloadJob: Job? = null
 
     init {
         viewModelScope.launch { app.historyStore.load() }
+        viewModelScope.launch(Dispatchers.IO) { UpdateInstaller.removeStale(app, BuildConfig.VERSION_NAME) }
         viewModelScope.launch {
             val saved = app.settingsStore.current()
             if (saved.updateWasAvailable || isUpdateCheckDue(saved.lastUpdateCheckMs, System.currentTimeMillis())) {
@@ -102,6 +127,48 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             // Background checks stay silent; only a manual check reports a problem.
             if (showStatus) updateStatus = UpdateStatus.Failed(failure.message.orEmpty())
         }
+    }
+
+    /** Downloads the available update and checks it, ready for Android's installer. */
+    fun downloadUpdate() {
+        val release = update ?: return
+        if (download is DownloadState.Downloading) return
+        if (!isDownloadableRelease(release)) {
+            download = DownloadState.Rejected
+            return
+        }
+        downloadJob?.cancel()
+        download = DownloadState.Downloading(0)
+        downloadJob = viewModelScope.launch {
+            val job = coroutineContext.job
+            val file = UpdateInstaller.fileFor(app, release.version)
+            val result = try {
+                app.updateDownloader.download(release, file) { received, total ->
+                    val percent = (received * 100 / total).toInt()
+                    val shown = download
+                    // From the download thread; a cancelled download mustn't come back.
+                    if (job.isActive && (shown !is DownloadState.Downloading || shown.percent != percent)) {
+                        download = DownloadState.Downloading(percent)
+                    }
+                }
+                if (withContext(Dispatchers.IO) { UpdateInstaller.isUpdateFor(app, file) }) {
+                    DownloadState.Ready(file)
+                } else {
+                    file.delete()
+                    DownloadState.Rejected
+                }
+            } catch (failure: IOException) {
+                DownloadState.Failed(failure.message.orEmpty())
+            }
+            // Cancel already showed the plain button again.
+            if (job.isActive) download = result
+        }
+    }
+
+    fun cancelDownload() {
+        downloadJob?.cancel()
+        downloadJob = null
+        download = DownloadState.Idle
     }
 
     fun setUiLanguage(code: String) {

@@ -49,6 +49,7 @@
     <string name="action_save">Save</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_edit">Edit</string>
+    <string name="action_select_again">Select again</string>
     <string name="action_back">Back</string>
     <string name="action_open_settings">Open Settings</string>
 
@@ -88,7 +89,14 @@
     <string name="about_checking">Checking…</string>
     <string name="about_up_to_date">You have the latest version.</string>
     <string name="about_available">New version available: %1$s</string>
-    <string name="about_download">View and download</string>
+    <string name="about_download">View on GitHub</string>
+    <string name="about_update_now">Update now</string>
+    <string name="about_downloading">Downloading… %1$d%%</string>
+    <string name="about_install">Install</string>
+    <string name="about_install_hint">Android asks you to confirm the update. The first time, it also asks you to let SnipDo install apps.</string>
+    <string name="about_install_permission">Allow SnipDo to install apps, then tap Install again.</string>
+    <string name="about_download_failed">Couldn\'t download the update: %1$s</string>
+    <string name="about_download_rejected">The downloaded file isn\'t a valid update for this app, so it was deleted.</string>
     <string name="about_check_failed">Couldn\'t check for updates: %1$s</string>
     <string name="settings_update_badge">Settings ⬇</string>
     <string name="settings_selection">Screen selection</string>

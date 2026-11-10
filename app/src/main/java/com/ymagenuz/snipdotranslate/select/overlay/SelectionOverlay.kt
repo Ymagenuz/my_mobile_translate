@@ -179,7 +179,7 @@ class SelectionOverlay(
     }
 
     fun onBack() {
-        if (sheetVisible) closeSheet() else close()
+        if (sheetVisible) dismissSheet() else close()
     }
 
     private fun startScan(script: ScanScript) {
@@ -292,6 +292,17 @@ class SelectionOverlay(
         // Nothing was translated yet, so there's nothing to go back to in the sheet.
         if (showResult) editing = false else closeSheet()
     }
+
+    /**
+     * Swiping the sheet away, tapping outside it or Back. Once something has been translated
+     * that means done, so the selection closes too; before that, it returns to the pens.
+     */
+    private fun dismissSheet() {
+        if (showResult) close() else closeSheet()
+    }
+
+    /** Back to the pens with the same words selected, to change them and translate again. */
+    private fun selectAgain() = closeSheet()
 
     private fun closeSheet() {
         session.stop()
@@ -411,7 +422,7 @@ class SelectionOverlay(
     private fun ResultSheet() {
         val state by session.state.collectAsStateWithLifecycle()
         val current by settings.collectAsStateWithLifecycle()
-        SheetFrame(onDismiss = ::closeSheet) {
+        SheetFrame(onDismiss = ::dismissSheet) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -437,7 +448,7 @@ class SelectionOverlay(
                                 )
                                 Spacer(Modifier.weight(1f))
                                 TextButton(onClick = ::editSource) { Text(stringResource(R.string.action_edit)) }
-                                TextButton(onClick = ::openInApp) { Text(stringResource(R.string.action_open_in_app)) }
+                                TextButton(onClick = ::selectAgain) { Text(stringResource(R.string.action_select_again)) }
                             }
                             Text(it, maxLines = 3, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyMedium)
                         }
@@ -454,6 +465,9 @@ class SelectionOverlay(
                                 onToggleBack = ::setBackTranslation,
                             ),
                         )
+                        if (!editing && state.request != null) {
+                            TextButton(onClick = ::openInApp) { Text(stringResource(R.string.action_open_in_app)) }
+                        }
                     }
                 }
             }

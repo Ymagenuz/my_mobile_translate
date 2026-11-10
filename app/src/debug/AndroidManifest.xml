@@ -4,5 +4,8 @@
         <activity
             android:name=".debug.ScanFixtureActivity"
             android:exported="true" />
+        <activity
+            android:name=".debug.UpdateFixtureActivity"
+            android:exported="true" />
     </application>
 </manifest>

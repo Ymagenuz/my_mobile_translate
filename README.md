@@ -26,7 +26,7 @@ Pull down the shade and tap **Select on screen**. Android asks whether to share 
 | ¶ Paragraph pen | Tap toggles a whole paragraph. |
 | ▭ Area pen | Drag a rectangle to have the vision model read just that region, for what the scan can't read: Russian, handwriting, stylised text. |
 
-The toolbar also has undo and redo, select all, clear, a reading-order or selection-order toggle, and the scan language (中, A, あ, 한). Drag it by either ⠿ in its bottom corners; it snaps to the nearest side, remembers its place and collapses to a pill. Two fingers pinch and pan the frozen image. Confirm with **Translate** or **Copy**, or tap **Edit** to correct what the scan misread before anything is sent. After a translation, **Edit** in the result does the same and translates again. Closing the result returns to your selection; Back or ✕ returns to the live app.
+The toolbar also has undo and redo, select all, clear, a reading-order or selection-order toggle, and the scan language (中, A, あ, 한). Drag it by either ⠿ in its bottom corners; it snaps to the nearest side, remembers its place and collapses to a pill. Two fingers pinch and pan the frozen image. Confirm with **Translate** or **Copy**, or tap **Edit** to correct what the scan misread before anything is sent. After a translation, **Edit** in the result does the same and translates again. Once something is translated, swiping the result down, tapping outside it or Back returns to the live app; **Select again** goes back to your selection to change it. ✕ on the toolbar also returns to the app.
 
 Translations fade in as they stream, as on the desktop. Android's **Remove animations** setting turns this off.
 
@@ -43,14 +43,13 @@ That's all. Screen selection uses Android's standard screen-capture permission r
 - Nothing is sent until you confirm, and then only the words you selected. The area pen and **Read with AI** send only that image.
 - API keys are encrypted with a key held in the Android Keystore. Backups and device transfers are turned off.
 - ML Kit's own usage logging is disabled in the app: with its upload path removed, logged events are discarded on the phone.
-- Update checks ask GitHub for the latest release and reveal only the app version.
+- Update checks ask GitHub for the latest release and reveal only the app version. **Update now** downloads the APK only from this project's GitHub release, checks it against the release's SHA-256 file and that it carries the same signature, then Android asks you to confirm installing it. The first time, Android also asks you to let SnipDo install apps.
 
 ## Differences from the desktop app
 
 - Custom providers must use HTTPS, because plain HTTP would send API keys across shared networks.
 - Not included yet: LaTeX typesetting (formulas are protected during translation and shown as source), **Locate in translation**, and Markdown formatting in the input box.
 - Russian isn't supported by the on-device scan; use the area pen.
-- Updates open the release page in your browser rather than installing inside the app.
 
 ## Building
 

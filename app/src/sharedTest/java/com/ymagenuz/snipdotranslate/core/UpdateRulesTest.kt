@@ -50,7 +50,65 @@ class UpdateRulesTest {
     @Test
     fun comparesNumericallyAndBuildsTrustedUrl() {
         val result = parse(release(JsonPrimitive("v1.10.0")), "1.9.9")
-        assertEquals(ReleaseInfo("1.10.0", "$REPOSITORY_URL/releases/tag/v1.10.0"), result)
+        val download = "$REPOSITORY_URL/releases/download/v1.10.0"
+        val expected = ReleaseInfo(
+            version = "1.10.0",
+            url = "$REPOSITORY_URL/releases/tag/v1.10.0",
+            apkUrl = "$download/$UPDATE_APK",
+            apkSize = 1024,
+            checksumUrl = "$download/$UPDATE_CHECKSUM",
+            checksumSize = 86,
+        )
+        assertEquals(expected, result)
+        assertTrue(isDownloadableRelease(requireNotNull(result)))
+    }
+
+    @Test
+    fun onlyThisProjectsAssetsForTheSameVersionAreDownloadable() {
+        val good = requireNotNull(parse(release()))
+        assertTrue(isDownloadableRelease(good))
+        listOf(
+            good.copy(version = "13.0.1"),
+            good.copy(url = "https://untrusted.example/releases/tag/v13.0.0"),
+            good.copy(apkUrl = "https://untrusted.example/$UPDATE_APK"),
+            good.copy(checksumUrl = "$REPOSITORY_URL/releases/download/v12.0.0/$UPDATE_CHECKSUM"),
+            good.copy(apkSize = 0),
+            good.copy(apkSize = 512L * 1024L * 1024L + 1L),
+            good.copy(checksumSize = 4097),
+        ).forEach { assertFalse("release $it", isDownloadableRelease(it)) }
+    }
+
+    @Test
+    fun downloadsGoOnlyToTheReleaseLinkAndGitHubAssetHosts() {
+        val initial = "$REPOSITORY_URL/releases/download/v13.0.0/$UPDATE_APK"
+        assertTrue(isAllowedUpdateUrl(initial, initial))
+        assertTrue(isAllowedUpdateUrl("https://release-assets.githubusercontent.com/github-production-release-asset/1?sig=x", initial))
+        assertTrue(isAllowedUpdateUrl("https://objects.githubusercontent.com/a/b", initial))
+        listOf(
+            "http://release-assets.githubusercontent.com/a",
+            "https://evil.githubusercontent.com/a",
+            "https://release-assets.githubusercontent.com:8443/a",
+            "https://user@release-assets.githubusercontent.com/a",
+            "https://release-assets.githubusercontent.com/a#part",
+            "https://github.com/Ymagenuz/my_mobile_translate/releases/download/v12.0.0/$UPDATE_APK",
+            "https://untrusted.example/$UPDATE_APK",
+            "not a url",
+        ).forEach { assertFalse("url $it", isAllowedUpdateUrl(it, initial)) }
+    }
+
+    @Test
+    fun checksumFilesMustNameTheApk() {
+        val hash = "AB".repeat(32)
+        assertEquals(hash.lowercase(), parseUpdateChecksum("$hash  $UPDATE_APK".toByteArray()))
+        assertEquals(hash.lowercase(), parseUpdateChecksum("$hash  $UPDATE_APK\r\n".toByteArray()))
+        listOf(
+            hash,
+            "$hash $UPDATE_APK",
+            "$hash  other.apk",
+            "${hash.drop(2)}  $UPDATE_APK",
+            "${"g".repeat(64)}  $UPDATE_APK",
+            "$hash  $UPDATE_APK\n\n",
+        ).forEach { assertNull("checksum $it", parseUpdateChecksum(it.toByteArray())) }
     }
 
     @Test

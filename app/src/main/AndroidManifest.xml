@@ -6,6 +6,8 @@
     <!-- Screen selection holds Android's screen-capture permission for one screenshot. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <!-- Hands a downloaded update to Android's installer; Android asks the user to allow it once. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:name=".SnipDoApp"

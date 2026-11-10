@@ -47,6 +47,7 @@
     <string name="action_save">保存</string>
     <string name="action_cancel">取消</string>
     <string name="action_edit">编辑</string>
+    <string name="action_select_again">重新选词</string>
     <string name="action_back">返回</string>
     <string name="action_open_settings">打开设置</string>
 
@@ -115,7 +116,14 @@
     <string name="about_checking">正在检查…</string>
     <string name="about_up_to_date">已是最新版本。</string>
     <string name="about_available">有新版本：%1$s</string>
-    <string name="about_download">查看并下载</string>
+    <string name="about_download">在 GitHub 查看</string>
+    <string name="about_update_now">立即更新</string>
+    <string name="about_downloading">正在下载… %1$d%%</string>
+    <string name="about_install">安装</string>
+    <string name="about_install_hint">Android 会请你确认更新。第一次还会请你允许 SnipDo 安装应用。</string>
+    <string name="about_install_permission">请允许 SnipDo 安装应用，然后再次点按“安装”。</string>
+    <string name="about_download_failed">下载更新失败：%1$s</string>
+    <string name="about_download_rejected">下载的文件不是本应用的有效更新，已删除。</string>
     <string name="about_check_failed">检查更新失败：%1$s</string>
     <string name="settings_update_badge">设置 ⬇</string>
 </resources>

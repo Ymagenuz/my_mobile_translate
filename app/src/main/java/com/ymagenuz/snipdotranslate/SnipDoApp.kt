@@ -12,6 +12,7 @@ import com.ymagenuz.snipdotranslate.domain.ChatStreamer
 import com.ymagenuz.snipdotranslate.domain.ProviderAccess
 import com.ymagenuz.snipdotranslate.domain.TranslationSession
 import com.ymagenuz.snipdotranslate.update.UpdateChecker
+import com.ymagenuz.snipdotranslate.update.UpdateDownloader
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
 
@@ -19,6 +20,7 @@ class SnipDoApp : Application() {
     private val http by lazy { createHttpClient() }
     val chatClient by lazy { ChatClient(http) }
     val updateChecker by lazy { UpdateChecker(http, BuildConfig.VERSION_NAME) }
+    val updateDownloader by lazy { UpdateDownloader(http, BuildConfig.VERSION_NAME) }
     val settingsStore by lazy {
         SettingsStore(
             PreferenceDataStoreFactory.create { File(filesDir, "datastore/settings.preferences_pb") },

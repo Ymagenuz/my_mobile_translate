@@ -1,6 +1,8 @@
 package com.ymagenuz.snipdotranslate.core
 
 import java.math.BigInteger
+import java.net.URI
+import java.net.URISyntaxException
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -26,11 +28,21 @@ private val DOWNLOAD_SECTION = Regex(
     RegexOption.DOT_MATCHES_ALL,
 )
 
+const val MAX_UPDATE_REDIRECTS = 5
+
+// GitHub's documented release-asset hosts; never arbitrary subdomains.
+private val UPDATE_ASSET_HOSTS = setOf("release-assets.githubusercontent.com", "objects.githubusercontent.com")
+private val UPDATE_CHECKSUM_LINE = Regex("([0-9a-fA-F]{64})  ${Regex.escape(UPDATE_APK)}(?:\\r?\\n)?")
+
 data class ReleaseInfo(
     val version: String,
     val url: String,
     val notes: String = "",
     val published: String = "",
+    val apkUrl: String = "",
+    val apkSize: Long = 0,
+    val checksumUrl: String = "",
+    val checksumSize: Long = 0,
 )
 
 private fun versionParts(version: String): List<BigInteger> {
@@ -87,14 +99,16 @@ fun parseRelease(payload: JsonElement, currentVersion: String): ReleaseInfo? {
     if (!isAbove(version, current)) return null
 
     val assets = requireNotNull(payload["assets"] as? JsonArray) { "Invalid release assets" }
+    val sizes = mutableMapOf<String, Long>()
     for ((name, maximum) in listOf(UPDATE_APK to MAX_APK_BYTES, UPDATE_CHECKSUM to MAX_CHECKSUM_BYTES)) {
         val asset = assets.filterIsInstance<JsonObject>().filter { it["name"].plainString() == name }
             .singleOrNull() ?: return null
         val size = asset["size"].strictLong() ?: return null
         val usable = asset["state"].plainString() == "uploaded" &&
             size in 1..maximum &&
-            asset["browser_download_url"].plainString() == "$REPOSITORY_URL/releases/download/$tag/$name"
+            asset["browser_download_url"].plainString() == assetUrl(tag, name)
         if (!usable) return null
+        sizes[name] = size
     }
 
     return ReleaseInfo(
@@ -104,8 +118,53 @@ fun parseRelease(payload: JsonElement, currentVersion: String): ReleaseInfo? {
         published = payload["published_at"].plainString()
             ?.let { PUBLISHED_AT.matchEntire(it)?.groupValues?.get(1) }
             .orEmpty(),
+        apkUrl = assetUrl(tag, UPDATE_APK),
+        apkSize = sizes.getValue(UPDATE_APK),
+        checksumUrl = assetUrl(tag, UPDATE_CHECKSUM),
+        checksumSize = sizes.getValue(UPDATE_CHECKSUM),
     )
 }
+
+private fun assetUrl(tag: String, name: String) = "$REPOSITORY_URL/releases/download/$tag/$name"
+
+/** Whether [release] points at this project's own assets for its version, as parsed above. */
+fun isDownloadableRelease(release: ReleaseInfo): Boolean {
+    val prefix = "$REPOSITORY_URL/releases/tag/"
+    if (!release.url.startsWith(prefix)) return false
+    val tag = release.url.removePrefix(prefix)
+    val sameVersion = try {
+        versionParts(tag) == versionParts(release.version)
+    } catch (_: IllegalArgumentException) {
+        false
+    }
+    return sameVersion &&
+        release.apkSize in 1..MAX_APK_BYTES &&
+        release.checksumSize in 1..MAX_CHECKSUM_BYTES &&
+        release.apkUrl == assetUrl(tag, UPDATE_APK) &&
+        release.checksumUrl == assetUrl(tag, UPDATE_CHECKSUM)
+}
+
+/**
+ * Whether a download may go to [url]: the exact GitHub link it started from, or one of
+ * GitHub's asset hosts that link redirects to. HTTPS only, with nothing unusual in it.
+ */
+fun isAllowedUpdateUrl(url: String, initialUrl: String): Boolean {
+    val uri = try {
+        URI(url)
+    } catch (_: URISyntaxException) {
+        return false
+    }
+    if (uri.scheme != "https" || uri.rawUserInfo != null || uri.port != -1 || uri.rawFragment != null) return false
+    return when (uri.host) {
+        "github.com" -> url == initialUrl
+        in UPDATE_ASSET_HOSTS -> true
+        else -> false
+    }
+}
+
+/** The lowercase SHA-256 from a checksum file written as "<hash>  SnipDoTranslate.apk", or null. */
+fun parseUpdateChecksum(body: ByteArray): String? =
+    UPDATE_CHECKSUM_LINE.matchEntire(String(body, Charsets.US_ASCII))?.groupValues?.get(1)?.lowercase()
 
 /** Automatic checks run at most once per interval, and always if the clock went backwards. */
 fun isUpdateCheckDue(lastCheckMs: Long?, nowMs: Long): Boolean =

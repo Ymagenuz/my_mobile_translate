@@ -8,6 +8,7 @@ import android.content.Intent
 import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.LocalActivity
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
@@ -32,6 +33,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -68,6 +70,7 @@ import com.ymagenuz.snipdotranslate.data.UI_LANGUAGE_CHINESE
 import com.ymagenuz.snipdotranslate.data.UI_LANGUAGE_ENGLISH
 import com.ymagenuz.snipdotranslate.entry.SelectOnScreenTileService
 import com.ymagenuz.snipdotranslate.entry.TranslateClipboardTileService
+import com.ymagenuz.snipdotranslate.update.UpdateInstaller
 import java.io.IOException
 import kotlinx.coroutines.launch
 
@@ -262,7 +265,8 @@ private fun AboutSection(viewModel: MainViewModel) {
     if (release != null) {
         Text(stringResource(R.string.about_available, release.version), color = MaterialTheme.colorScheme.primary)
         if (release.notes.isNotEmpty()) Text(release.notes, style = MaterialTheme.typography.bodySmall)
-        Button(
+        UpdateActions(viewModel)
+        OutlinedButton(
             onClick = {
                 try {
                     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(release.url)))
@@ -280,6 +284,53 @@ private fun AboutSection(viewModel: MainViewModel) {
         status is UpdateStatus.Failed ->
             Text(stringResource(R.string.about_check_failed, status.message), color = MaterialTheme.colorScheme.error)
         status == UpdateStatus.Finished && release == null -> Text(stringResource(R.string.about_up_to_date))
+    }
+}
+
+/** Downloads the update inside the app, then hands it to Android's installer. */
+@Composable
+private fun UpdateActions(viewModel: MainViewModel) {
+    val context = LocalContext.current
+    var askedPermission by remember { mutableStateOf(false) }
+    when (val state = viewModel.download) {
+        is DownloadState.Downloading -> {
+            Text(stringResource(R.string.about_downloading, state.percent))
+            LinearProgressIndicator(progress = { state.percent / 100f }, modifier = Modifier.fillMaxWidth())
+            TextButton(onClick = viewModel::cancelDownload) { Text(stringResource(R.string.action_cancel)) }
+        }
+        is DownloadState.Ready -> {
+            Button(
+                onClick = {
+                    askedPermission = !UpdateInstaller.canInstall(context)
+                    val intent = if (askedPermission) {
+                        UpdateInstaller.permissionIntent(context)
+                    } else {
+                        UpdateInstaller.installIntent(context, state.file)
+                    }
+                    try {
+                        context.startActivity(intent)
+                    } catch (_: ActivityNotFoundException) {
+                        // Some phones lack the page; App info leads to the same permission.
+                        context.startActivity(
+                            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}")),
+                        )
+                    }
+                },
+            ) { Text(stringResource(R.string.about_install)) }
+            Text(
+                stringResource(if (askedPermission) R.string.about_install_permission else R.string.about_install_hint),
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+        else -> {
+            Button(onClick = viewModel::downloadUpdate) { Text(stringResource(R.string.about_update_now)) }
+            val problem = when (state) {
+                is DownloadState.Failed -> stringResource(R.string.about_download_failed, state.message)
+                DownloadState.Rejected -> stringResource(R.string.about_download_rejected)
+                else -> null
+            }
+            problem?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+        }
     }
 }
 
