@@ -7,5 +7,8 @@
         <activity
             android:name=".debug.UpdateFixtureActivity"
             android:exported="true" />
+        <activity
+            android:name=".debug.InterpretFixtureActivity"
+            android:exported="true" />
     </application>
 </manifest>

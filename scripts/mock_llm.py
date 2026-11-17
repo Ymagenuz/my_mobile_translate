@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -26,6 +27,51 @@ STREAM_TEXT = (
 )
 
 
+# Translations for the interpretation fixture's default lines (app/src/debug/.../InterpretFixtureActivity.kt).
+INTERPRETATIONS = {
+    ("你好，请问去火车站怎么走？", "English"): "Hello, could you tell me how to get to the train station?",
+    ("你好，请问去火车站怎么走？", "日本語"): "こんにちは、駅へはどう行けばいいですか？",
+    ("我是第一次来这个城市。", "English"): "It's my first time in this city.",
+    ("我是第一次来这个城市。", "日本語"): "この街に来るのは初めてです。",
+    ("Go straight for two blocks and turn left at the bank.", "中文"): "直走两个路口，在银行那里左转。",
+    ("Go straight for two blocks and turn left at the bank.", "日本語"): "2ブロックまっすぐ進んで、銀行のところで左に曲がってください。",
+    ("It takes about ten minutes on foot.", "中文"): "走路大概十分钟。",
+    ("It takes about ten minutes on foot.", "日本語"): "歩いて10分くらいです。",
+    ("駅の近くにおいしいラーメン屋がありますよ。", "中文"): "车站附近有一家很好吃的拉面店哦。",
+    ("駅の近くにおいしいラーメン屋がありますよ。", "English"): "There's a great ramen shop near the station.",
+}
+
+
+# What the mock "hears" in a recording, by the language the prompt names.
+TRANSCRIPTS = {
+    "日本語": "駅はどこですか。",
+    "한국어": "역이 어디예요?",
+    "Français": "Où est la gare ?",
+    "中文": "请问车站在哪里？",
+    "English": "Where is the station?",
+}
+INTERPRETATIONS.update({
+    ("駅はどこですか。", "English"): "Where is the station?",
+    ("駅はどこですか。", "中文"): "车站在哪里？",
+    ("駅はどこですか。", "한국어"): "역이 어디예요?",
+    ("역이 어디예요?", "English"): "Where is the station?",
+    ("역이 어디예요?", "中文"): "车站在哪里？",
+    ("역이 어디예요?", "日本語"): "駅はどこですか。",
+})
+
+
+def transcript(prompt: str) -> str:
+    language = re.search(r"说话人用(.+?)说的话", prompt)
+    return TRANSCRIPTS.get(language.group(1) if language else "", "NO_SPEECH")
+
+
+def interpretation(prompt: str) -> str:
+    target = re.search(r"口译成(.+?)。", prompt)
+    language = target.group(1) if target else "?"
+    source = prompt[prompt.rfind("需要口译的内容：") + len("需要口译的内容："):].strip()
+    return INTERPRETATIONS.get((source, language), f"[{language}] {source}")
+
+
 def chunks_for(prompt: str) -> tuple[list[str], float]:
     if "请模拟失败" in prompt or "SIMULATE FAILURE" in prompt:
         return ["这是", "部分", "译文"], FAST_DELAY
@@ -34,6 +80,9 @@ def chunks_for(prompt: str) -> tuple[list[str], float]:
     if "SIMULATE STREAM" in prompt:
         # A few characters at a time, like a real model, to watch text fade in.
         return [STREAM_TEXT[start:start + 3] for start in range(0, len(STREAM_TEXT), 3)], STREAM_DELAY
+    if "同声传译员" in prompt:
+        text = interpretation(prompt)
+        return [text[start:start + 4] for start in range(0, len(text), 4)], STREAM_DELAY
     if "专业的多语言词典助手" in prompt:
         return ["# hello\n\n", "> **语言**：English\n\n", "## 释义\n", "- **感叹词**：你好\n"], FAST_DELAY
     if "回译引擎" in prompt:
@@ -46,9 +95,9 @@ def record(prompt: str) -> None:
     path = os.environ.get("MOCK_LOG")
     if not path:
         return
-    marks = ("待翻译文本：", "待查内容：", "待回译文本：")
+    marks = ("待翻译文本：", "待查内容：", "待回译文本：", "需要口译的内容：")
     position = max(prompt.rfind(mark) + len(mark) if mark in prompt else -1 for mark in marks)
-    source = prompt[position:].strip() if position >= 0 else "<image request>"
+    source = prompt[position:].strip() if position >= 0 else "<image or audio request>"
     with open(path, "a", encoding="utf-8") as log:
         log.write(json.dumps(source, ensure_ascii=False) + "\n")
 
@@ -78,7 +127,7 @@ class Handler(BaseHTTPRequestHandler):
         prompt = content if isinstance(content, str) else json.dumps(content, ensure_ascii=False)
         record(prompt)
         if not request.get("stream"):
-            self.reply_whole("这是从图片读取的文字。")
+            self.reply_whole(transcript(prompt) if "逐字转写" in prompt else "这是从图片读取的文字。")
             return
 
         chunks, delay = chunks_for(prompt)

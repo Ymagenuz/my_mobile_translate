@@ -50,6 +50,7 @@ data class ApiProviderConfig(
     val model: String,
     val supportsVision: Boolean,
     val disableThinking: Boolean = false,
+    val supportsAudio: Boolean = false,
 )
 
 /** Validates user-entered provider settings; throws [IllegalArgumentException] if unusable. */
@@ -59,6 +60,7 @@ fun validatedProviderConfig(
     supportsVision: Boolean,
     disableThinking: Boolean = false,
     allowLocalHttp: Boolean = false,
+    supportsAudio: Boolean = false,
 ): ApiProviderConfig {
     require(!hasControlCharacters(model)) { "API model must not contain control characters" }
     return ApiProviderConfig(
@@ -66,6 +68,7 @@ fun validatedProviderConfig(
         model = model.pyStrip(),
         supportsVision = supportsVision,
         disableThinking = disableThinking,
+        supportsAudio = supportsAudio,
     )
 }
 
@@ -78,6 +81,8 @@ data class ApiProviderSpec(
     val supportsVision: Boolean,
     val disableThinking: Boolean = false,
     val baseUrlEditable: Boolean = false,
+    // Off for every provider: their default models don't take audio. Android-only, for interpretation.
+    val supportsAudio: Boolean = false,
 )
 
 val API_PROVIDERS: List<ApiProviderSpec> = listOf(
@@ -129,13 +134,20 @@ fun apiProvider(providerId: String, config: ApiProviderConfig? = null): ApiProvi
             model = config.model,
             supportsVision = config.supportsVision,
             disableThinking = config.disableThinking,
+            supportsAudio = config.supportsAudio,
         )
     }
 }
 
 fun providerDefaultConfig(providerId: String): ApiProviderConfig {
     val provider = apiProvider(providerId)
-    return ApiProviderConfig(provider.baseUrl, provider.model, provider.supportsVision, provider.disableThinking)
+    return ApiProviderConfig(
+        provider.baseUrl,
+        provider.model,
+        provider.supportsVision,
+        provider.disableThinking,
+        provider.supportsAudio,
+    )
 }
 
 data class ChatCompletionOptions(

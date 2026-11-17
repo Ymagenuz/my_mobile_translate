@@ -18,6 +18,7 @@ import java.io.File
 
 class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
+    private val interpretViewModel: InterpretViewModel by viewModels()
     private var route: Route
         get() = viewModel.route
         set(value) {
@@ -69,6 +70,7 @@ class MainActivity : ComponentActivity() {
                             viewModel,
                             onHistory = { route = Route.HISTORY },
                             onSettings = { route = Route.SETTINGS },
+                            onInterpret = { route = Route.INTERPRET },
                             onTakePhoto = ::takePhoto,
                             onPickPhoto = {
                                 pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
@@ -76,6 +78,11 @@ class MainActivity : ComponentActivity() {
                         )
                         Route.HISTORY -> HistoryScreen(viewModel) { route = Route.TRANSLATE }
                         Route.SETTINGS -> SettingsScreen(viewModel) { route = Route.TRANSLATE }
+                        Route.INTERPRET -> InterpretScreen(
+                            interpretViewModel,
+                            onBack = { route = Route.TRANSLATE },
+                            onOpenSettings = { route = Route.SETTINGS },
+                        )
                     }
                 }
             }
@@ -92,6 +99,10 @@ class MainActivity : ComponentActivity() {
             route = Route.SETTINGS
             intent.removeExtra(EXTRA_OPEN_SETTINGS)
         }
+        if (intent.getBooleanExtra(EXTRA_OPEN_INTERPRET, false)) {
+            route = Route.INTERPRET
+            intent.removeExtra(EXTRA_OPEN_INTERPRET)
+        }
         val input = intent.getStringExtra(EXTRA_INPUT) ?: return
         route = Route.TRANSLATE
         viewModel.receive(input, intent.getStringExtra(EXTRA_RESULT), intent.getStringExtra(EXTRA_MODE))
@@ -100,6 +111,7 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_OPEN_SETTINGS = "open_settings"
+        const val EXTRA_OPEN_INTERPRET = "open_interpret"
         const val EXTRA_INPUT = "input"
         const val EXTRA_RESULT = "result"
         const val EXTRA_MODE = "mode"

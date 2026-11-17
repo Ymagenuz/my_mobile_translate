@@ -4,6 +4,7 @@ import com.ymagenuz.snipdotranslate.core.ApiProviderSpec
 import com.ymagenuz.snipdotranslate.core.chatCompletionOptions
 import com.ymagenuz.snipdotranslate.core.parseModelIds
 import java.io.IOException
+import java.util.Base64
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -64,6 +65,21 @@ fun visionMessageContent(prompt: String, imageDataUrl: String): JsonElement = bu
     addJsonObject {
         put("type", "image_url")
         putJsonObject("image_url") { put("url", imageDataUrl) }
+    }
+}
+
+/** A message with a recording, for writing down speech with an audio-capable model. */
+fun audioMessageContent(prompt: String, wav: ByteArray): JsonElement = buildJsonArray {
+    addJsonObject {
+        put("type", "text")
+        put("text", prompt)
+    }
+    addJsonObject {
+        put("type", "input_audio")
+        putJsonObject("input_audio") {
+            put("data", Base64.getEncoder().encodeToString(wav))
+            put("format", "wav")
+        }
     }
 }
 

@@ -179,6 +179,9 @@ fun SettingsScreen(viewModel: MainViewModel, onBack: () -> Unit) {
             SwitchRow(stringResource(R.string.settings_vision), draft.supportsVision) { value ->
                 change { it.copy(supportsVision = value) }
             }
+            SwitchRow(stringResource(R.string.settings_audio), draft.supportsAudio) { value ->
+                change { it.copy(supportsAudio = value) }
+            }
             SwitchRow(stringResource(R.string.settings_disable_thinking), draft.disableThinking) { value ->
                 change { it.copy(disableThinking = value) }
             }

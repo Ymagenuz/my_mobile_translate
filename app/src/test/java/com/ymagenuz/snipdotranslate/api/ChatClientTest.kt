@@ -222,6 +222,22 @@ class ChatClientTest {
     }
 
     @Test
+    fun recordingsAreSentAsWavAudioWithThePrompt() {
+        server.enqueue(MockResponse().setBody("""{"choices":[{"message":{"content":"駅はどこですか。"}}]}"""))
+        val wav = byteArrayOf(1, 2, 3, 4)
+
+        val reply = runBlocking { client.complete(provider, "k", audioMessageContent("transcribe", wav)) }
+
+        assertEquals("駅はどこですか。", reply)
+        val content = requestJson().getValue("messages").jsonArray.single().jsonObject.getValue("content").jsonArray
+        assertEquals("transcribe", content[0].jsonObject.getValue("text").jsonPrimitive.content)
+        assertEquals("input_audio", content[1].jsonObject.getValue("type").jsonPrimitive.content)
+        val audio = content[1].jsonObject.getValue("input_audio").jsonObject
+        assertEquals("wav", audio.getValue("format").jsonPrimitive.content)
+        assertEquals("AQIDBA==", audio.getValue("data").jsonPrimitive.content)
+    }
+
+    @Test
     fun completeReportsApiErrors() {
         server.enqueue(MockResponse().setResponseCode(429).setBody("""{"error":{"message":"slow down"}}"""))
 

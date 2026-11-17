@@ -8,6 +8,7 @@ import com.ymagenuz.snipdotranslate.core.ApiProviderConfig
 import com.ymagenuz.snipdotranslate.core.DEEPSEEK_API_PROVIDER
 import com.ymagenuz.snipdotranslate.core.DEFAULT_API_PROVIDER
 import com.ymagenuz.snipdotranslate.core.MAX_HISTORY_ITEMS
+import com.ymagenuz.snipdotranslate.core.SpeakerSetup
 import java.io.File
 import java.time.LocalDateTime
 import javax.crypto.Cipher
@@ -184,6 +185,41 @@ class StoresTest {
         assertEquals("auto", settings.sourceLanguage)
         assertTrue(settings.apiConfigs.isEmpty())
         assertTrue(settings.backTranslation)
+    }
+
+    @Test
+    fun audioInputIsOffByDefaultAndKeptPerProvider() = runBlocking {
+        val store = SettingsStore(dataStore())
+        assertFalse(store.current().resolvedProvider().supportsAudio)
+        val audio = ApiProviderConfig("https://example.org/v1", "audio-model", false, false, supportsAudio = true)
+
+        store.update { it.copy(apiConfigs = mapOf(DEFAULT_API_PROVIDER to audio)) }
+
+        val saved = store.current()
+        assertTrue(saved.resolvedProvider().supportsAudio)
+        assertFalse(saved.resolvedProvider(DEEPSEEK_API_PROVIDER).supportsAudio)
+    }
+
+    @Test
+    fun interpretationSpeakersAndReadAloudPersist() = runBlocking {
+        val store = SettingsStore(dataStore())
+        assertTrue(store.current().interpretSpeakers.isEmpty())
+        assertTrue(store.current().interpretReadAloud)
+        val speakers = listOf(SpeakerSetup('A', "ja"), SpeakerSetup('C', "fr"))
+
+        store.update { it.copy(interpretSpeakers = speakers, interpretReadAloud = false) }
+
+        val saved = store.current()
+        assertEquals(speakers, saved.interpretSpeakers)
+        assertFalse(saved.interpretReadAloud)
+    }
+
+    @Test
+    fun unusableSavedSpeakersFallBackToTheDefaults() = runBlocking {
+        val raw = dataStore()
+        raw.edit { it[stringPreferencesKey("interpret_speakers")] = "A=zh,A=en" }
+
+        assertTrue(SettingsStore(raw).current().interpretSpeakers.isEmpty())
     }
 
     @Test

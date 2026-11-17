@@ -2,6 +2,10 @@
 
 **English** | [简体中文](CHANGELOG.zh-CN.md)
 
+## Unreleased
+
+- **Interpret**: a new page for a conversation between people who speak different languages. Each speaker has a button at the bottom, with their language above it: tap it to talk until you tap it again, or press and hold it while you talk. **+** adds speakers, up to six. Every sentence is translated into the other speakers' languages as soon as it's heard, while listening carries on, and with **Read aloud** on the translations are spoken between sentences. It uses the phone's speech recognition and text-to-speech, and your API key for the translation. A language the phone's speech recognition can't hear, such as anything but Chinese and English with Xiaomi's engine, is marked: its speaker can't talk but still gets translations. If your model accepts audio, turn on **Supports audio input** in **Settings → API** and the model hears those languages instead: SnipDo records them, splits them into sentences at pauses, and has the model write each one down.
+
 ## 0.4.0 — 2026-11-16
 
 - With the accessibility service, a selection can carry on past the bottom of the screen. When your selection reaches the bottom, **Continue ↓** keeps the words and leaves the frozen screen with a small bar. What you kept stays marked on the live app in a colour of its own and moves with the text in apps that report their scrolling. Scroll the app, then tap **Capture** in the bar, the tile or the shortcut. The lines you already have keep that colour on the new screen and can't be selected twice, even where the scan doesn't find their text again, and a line the edge cut off is replaced by its whole version. **Translate**, **Edit** and **Copy** use every part as one text. Only the words are kept between screens.

@@ -41,9 +41,10 @@ data class ApiDraft(
     val supportsVision: Boolean,
     val disableThinking: Boolean,
     val apiKey: String,
+    val supportsAudio: Boolean = false,
 )
 
-enum class Route { TRANSLATE, HISTORY, SETTINGS }
+enum class Route { TRANSLATE, HISTORY, SETTINGS, INTERPRET }
 
 sealed interface UpdateStatus {
     data object Idle : UpdateStatus
@@ -232,6 +233,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 config.supportsVision,
                 config.disableThinking,
                 app.keyVault.read(provider.providerId),
+                supportsAudio = config.supportsAudio,
             )
         }
     }
@@ -258,6 +260,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     draft.supportsVision,
                     draft.disableThinking,
                     BuildConfig.ALLOW_LOCAL_HTTP,
+                    supportsAudio = draft.supportsAudio,
                 ).takeIf { it.model.isNotEmpty() }
             } catch (_: IllegalArgumentException) {
                 null

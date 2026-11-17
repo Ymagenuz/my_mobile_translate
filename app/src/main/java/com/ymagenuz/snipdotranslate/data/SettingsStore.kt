@@ -15,9 +15,12 @@ import com.ymagenuz.snipdotranslate.core.ApiProviderSpec
 import com.ymagenuz.snipdotranslate.core.DEFAULT_API_PROVIDER
 import com.ymagenuz.snipdotranslate.core.SOURCE_AUTO
 import com.ymagenuz.snipdotranslate.core.SOURCE_LANGUAGES
+import com.ymagenuz.snipdotranslate.core.SpeakerSetup
 import com.ymagenuz.snipdotranslate.core.TARGET_DEFAULT
 import com.ymagenuz.snipdotranslate.core.TARGET_LANGUAGES
 import com.ymagenuz.snipdotranslate.core.apiProvider
+import com.ymagenuz.snipdotranslate.core.decodeSpeakers
+import com.ymagenuz.snipdotranslate.core.encodeSpeakers
 import com.ymagenuz.snipdotranslate.core.providerDefaultConfig
 import com.ymagenuz.snipdotranslate.core.validatedProviderConfig
 import java.io.IOException
@@ -46,6 +49,9 @@ data class AppSettings(
     val minusBrushDp: Float = 20f,
     val toolbarX: Float = -1f,
     val toolbarY: Float = -1f,
+    // Empty until the speakers are first changed; until then they follow the phone's language.
+    val interpretSpeakers: List<SpeakerSetup> = emptyList(),
+    val interpretReadAloud: Boolean = true,
 ) {
     fun configFor(providerId: String): ApiProviderConfig =
         apiConfigs[providerId] ?: providerDefaultConfig(providerId)
@@ -60,6 +66,7 @@ private data class StoredConfig(
     val model: String,
     val supportsVision: Boolean,
     val disableThinking: Boolean = false,
+    val supportsAudio: Boolean = false,
 )
 
 /** Saved settings. A bad value falls back to its default without losing the others. */
@@ -96,6 +103,8 @@ class SettingsStore(
         minusBrushDp = preferences[MINUS_BRUSH] ?: 20f,
         toolbarX = preferences[TOOLBAR_X] ?: -1f,
         toolbarY = preferences[TOOLBAR_Y] ?: -1f,
+        interpretSpeakers = decodeSpeakers(preferences[INTERPRET_SPEAKERS]).orEmpty(),
+        interpretReadAloud = preferences[INTERPRET_READ_ALOUD] ?: true,
     )
 
     private fun decodeConfigs(text: String?): Map<String, ApiProviderConfig> {
@@ -116,6 +125,7 @@ class SettingsStore(
                     config.supportsVision,
                     config.disableThinking,
                     allowLocalHttp,
+                    supportsAudio = config.supportsAudio,
                 )
                 if (validated.model.isEmpty()) null else providerId to validated
             } catch (_: IllegalArgumentException) {
@@ -128,7 +138,7 @@ class SettingsStore(
         preferences[API_PROVIDER] = settings.apiProvider
         preferences[API_CONFIGS] = JSON.encodeToString(
             settings.apiConfigs.mapValues { (_, config) ->
-                StoredConfig(config.baseUrl, config.model, config.supportsVision, config.disableThinking)
+                StoredConfig(config.baseUrl, config.model, config.supportsVision, config.disableThinking, config.supportsAudio)
             },
         )
         preferences[BACK_TRANSLATION] = settings.backTranslation
@@ -140,6 +150,12 @@ class SettingsStore(
         preferences[MINUS_BRUSH] = settings.minusBrushDp
         preferences[TOOLBAR_X] = settings.toolbarX
         preferences[TOOLBAR_Y] = settings.toolbarY
+        preferences[INTERPRET_READ_ALOUD] = settings.interpretReadAloud
+        if (settings.interpretSpeakers.isEmpty()) {
+            preferences.remove(INTERPRET_SPEAKERS)
+        } else {
+            preferences[INTERPRET_SPEAKERS] = encodeSpeakers(settings.interpretSpeakers)
+        }
         val lastCheck = settings.lastUpdateCheckMs
         if (lastCheck == null) preferences.remove(LAST_UPDATE_CHECK) else preferences[LAST_UPDATE_CHECK] = lastCheck
     }
@@ -158,5 +174,7 @@ class SettingsStore(
         val MINUS_BRUSH = floatPreferencesKey("minus_brush_dp")
         val TOOLBAR_X = floatPreferencesKey("toolbar_x")
         val TOOLBAR_Y = floatPreferencesKey("toolbar_y")
+        val INTERPRET_SPEAKERS = stringPreferencesKey("interpret_speakers")
+        val INTERPRET_READ_ALOUD = booleanPreferencesKey("interpret_read_aloud")
     }
 }

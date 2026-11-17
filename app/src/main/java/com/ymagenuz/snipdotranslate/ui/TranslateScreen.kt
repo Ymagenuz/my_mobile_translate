@@ -44,6 +44,7 @@ fun TranslateScreen(
     viewModel: MainViewModel,
     onHistory: () -> Unit,
     onSettings: () -> Unit,
+    onInterpret: () -> Unit,
     onTakePhoto: () -> Unit,
     onPickPhoto: () -> Unit,
 ) {
@@ -107,6 +108,7 @@ fun TranslateScreen(
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = onTakePhoto) { Text(stringResource(R.string.action_camera)) }
             OutlinedButton(onClick = onPickPhoto) { Text(stringResource(R.string.action_photo)) }
+            OutlinedButton(onClick = onInterpret) { Text(stringResource(R.string.action_interpret)) }
         }
 
         if (state.status != RunStatus.IDLE) {

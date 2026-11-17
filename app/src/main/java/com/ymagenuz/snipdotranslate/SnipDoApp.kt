@@ -10,7 +10,13 @@ import com.ymagenuz.snipdotranslate.data.KeyVault
 import com.ymagenuz.snipdotranslate.data.SettingsStore
 import com.ymagenuz.snipdotranslate.domain.ChatStreamer
 import com.ymagenuz.snipdotranslate.domain.ProviderAccess
+import com.ymagenuz.snipdotranslate.domain.SpeechInput
+import com.ymagenuz.snipdotranslate.domain.SpeechOutput
 import com.ymagenuz.snipdotranslate.domain.TranslationSession
+import com.ymagenuz.snipdotranslate.speech.ModelSpeechInput
+import com.ymagenuz.snipdotranslate.speech.SystemSpeechInput
+import com.ymagenuz.snipdotranslate.speech.transcribeWithModel
+import com.ymagenuz.snipdotranslate.speech.SystemSpeechOutput
 import com.ymagenuz.snipdotranslate.update.UpdateChecker
 import com.ymagenuz.snipdotranslate.update.UpdateDownloader
 import java.io.File
@@ -29,6 +35,15 @@ class SnipDoApp : Application() {
     }
     val keyVault by lazy { KeyVault(File(noBackupFilesDir, "keys"), AndroidKeystoreCipher()) }
     val historyStore by lazy { HistoryStore(File(filesDir, "translation_history.json")) }
+
+    // Debug builds can swap these to script a conversation on an emulator without a microphone.
+    var speechInputFactory: () -> SpeechInput = { SystemSpeechInput(this) }
+    var speechOutputFactory: () -> SpeechOutput = { SystemSpeechOutput(this) }
+
+    /** Hears languages the phone can't, through the translation model, when it takes audio. */
+    var modelSpeechInputFactory: () -> SpeechInput = {
+        ModelSpeechInput(this, transcribe = { wav, language -> transcribeWithModel(this, wav, language) })
+    }
 
     fun newSession(scope: CoroutineScope) = TranslationSession(
         scope = scope,
