@@ -2,7 +2,7 @@
 
 **English** | [简体中文](CHANGELOG.zh-CN.md)
 
-## Unreleased
+## 0.5.0 — 2026-11-17
 
 - **Interpret**: a new page for a conversation between people who speak different languages. Each speaker has a button at the bottom, with their language above it: tap it to talk until you tap it again, or press and hold it while you talk. **+** adds speakers, up to six. While a speaker's microphone is open, their button shows its level as a moving wave. Every sentence is translated into the other speakers' languages as soon as it's heard, while listening carries on, and with **Read aloud** on the translations are spoken between sentences. The conversation shows as bubbles, the first speaker's on the left and the second's on the right. It uses the phone's speech recognition and text-to-speech, and your API key for the translation. A language the phone's speech recognition can't hear, such as anything but Chinese and English with Xiaomi's engine, is marked: its speaker can't talk but still gets translations. If your model accepts audio, turn on **Supports audio input** in **Settings → Translation service** and the model hears those languages instead: SnipDo records them, splits them into sentences at pauses, and has the model write each one down.
 - A new look throughout: the app's blue and teal on cool grey, in light and dark, and drawn icons in place of the text buttons and symbols, which every phone maker's font drew differently. The app icon is redrawn and can take your wallpaper's colours as a themed icon on Android 13 and later, and both Quick Settings tiles have new icons.
