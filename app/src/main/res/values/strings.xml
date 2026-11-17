@@ -11,7 +11,6 @@
     <string name="action_photo">Photo</string>
     <string name="photo_unreadable">That picture couldn\'t be opened.</string>
     <string name="label_from_image">FROM IMAGE</string>
-    <string name="tool_ai_short" translatable="false">AI</string>
     <string name="tool_read_with_ai">Read the whole image with the vision model</string>
 
     <string name="pen_text">Text pen</string>
@@ -24,7 +23,6 @@
     <string name="tool_undo">Undo</string>
     <string name="tool_redo">Redo</string>
     <string name="tool_all">Select all</string>
-    <string name="tool_all_short">All</string>
     <string name="tool_clear">Clear selection</string>
     <string name="tool_script">Scan language</string>
     <string name="tool_collapse">Collapse the toolbar</string>
@@ -36,7 +34,7 @@
     <string name="selection_blocked">This app doesn\'t allow its screen to be captured.</string>
     <string name="selection_no_text">No text found. Try the area pen for anything the scan can\'t read.</string>
     <string name="selection_reading_image">Reading the selected area…</string>
-    <string name="continue_below">Continue ↓</string>
+    <string name="continue_below">Continue below</string>
     <string name="continue_part">Part %1$d</string>
     <plurals name="continue_parts_kept">
         <item quantity="one">%d part kept</item>
@@ -67,11 +65,10 @@
 
     <string name="title_history">History</string>
     <string name="title_settings">Settings</string>
-    <string name="input_label">Text to translate</string>
+    <string name="input_label">Type or paste text</string>
     <string name="mode_dictionary">Dictionary</string>
-    <string name="language_auto">Auto</string>
-    <string name="language_default">Default</string>
-    <string name="language_to">to</string>
+    <string name="language_auto">Detect language</string>
+    <string name="language_default">中文 / English</string>
 
     <string name="label_auto_translation">AUTO TRANSLATION</string>
     <string name="label_chinese_translation">CHINESE TRANSLATION</string>
@@ -95,7 +92,6 @@
     <string name="history_clear">Clear history</string>
 
     <string name="settings_language">Language</string>
-    <string name="settings_about">About</string>
     <string name="about_version">Version %1$s</string>
     <string name="about_check">Check for updates</string>
     <string name="about_checking">Checking…</string>
@@ -110,7 +106,6 @@
     <string name="about_download_failed">Couldn\'t download the update: %1$s</string>
     <string name="about_download_rejected">The downloaded file isn\'t a valid update for this app, so it was deleted.</string>
     <string name="about_check_failed">Couldn\'t check for updates: %1$s</string>
-    <string name="settings_update_badge">Settings ⬇</string>
     <string name="settings_selection">Screen selection</string>
     <string name="settings_selection_how">Add the Select on screen tile to Quick Settings, then tap it on any screen. Each time, Android asks whether to share the screen with SnipDo: tap Start or Share screen. You can also take a screenshot and share it to SnipDo.</string>
     <string name="settings_selection_privacy">SnipDo takes one screenshot and stops capturing straight away. The screenshot stays in memory on this phone. Nothing is sent until you confirm, and then only the words you selected.</string>
@@ -123,14 +118,11 @@
     <string name="settings_open_app_info">App info</string>
     <string name="capture_channel">Screen capture</string>
     <string name="capture_notification">Capturing the screen for selection</string>
-    <string name="settings_add_select_tile">Add Select on screen tile</string>
-    <string name="settings_add_clipboard_tile">Add Translate clipboard tile</string>
     <string name="settings_tile_added">Added “%1$s” to Quick Settings. New tiles usually go on the last page. To move it, open Quick Settings and tap the pencil (Edit) button.</string>
     <string name="settings_tile_already_added">“%1$s” is already in Quick Settings, on the last page unless you\'ve moved it. To move it, open Quick Settings and tap the pencil (Edit) button.</string>
     <string name="settings_tile_not_added">“%1$s” wasn\'t added. To add it yourself, open Quick Settings, tap the pencil (Edit) button and drag it into your tiles.</string>
     <string name="settings_translation">Translation</string>
     <string name="settings_back_translation">Back-translate each finished translation</string>
-    <string name="settings_api">API</string>
     <string name="settings_api_hint">Every provider uses the OpenAI Chat Completions format. API keys are encrypted and stored per provider on this phone.</string>
     <string name="settings_provider">Provider</string>
     <string name="settings_base_url">Base URL</string>
@@ -162,20 +154,64 @@
     <string name="interpret_hint_holding">Release when done</string>
     <string name="interpret_hint_paused">Paused while reading aloud</string>
     <string name="interpret_hint_finishing">Finishing…</string>
-    <string name="interpret_empty">Choose each speaker\'s language above their button. Tap a button and talk, then tap it again to stop, or press and hold it while you talk. Each sentence is translated into the other speakers\' languages as soon as it\'s heard, and read aloud if Read aloud is on. Add more speakers with +.</string>
     <string name="interpret_into">→ %1$s</string>
     <string name="interpret_nothing_to_translate">Everyone speaks this language, so there\'s nothing to translate.</string>
-    <string name="interpret_no_recognizer">This phone has no speech recognition service, so SnipDo can\'t hear the speakers. Install or turn on one, such as Speech Recognition and Synthesis from Google, or, if your model accepts audio, turn on Supports audio input in Settings → API.</string>
+    <string name="interpret_no_recognizer">This phone has no speech recognition service, so SnipDo can\'t hear the speakers. Install or turn on one, such as Speech Recognition and Synthesis from Google, or, if your model accepts audio, turn on Supports audio input in Settings → Translation service.</string>
     <string name="interpret_need_microphone">SnipDo needs the microphone to hear the speakers. Allow it in App info → Permissions.</string>
     <string name="interpret_engine_microphone">%1$s, which does speech recognition on this phone, isn\'t allowed to use the microphone, so it can\'t hear the speakers. Allow the microphone in its App info → Permissions.</string>
     <string name="interpret_microphone_busy">The microphone isn\'t available. Another app may be using it.</string>
-    <string name="interpret_language_unsupported">Speech recognition on this phone can\'t hear %1$s. If your model accepts audio, turn on Supports audio input in Settings → API to hear it through the model. Until then, this speaker still gets translations into %1$s.</string>
+    <string name="interpret_language_unsupported">Speech recognition on this phone can\'t hear %1$s. If your model accepts audio, turn on Supports audio input in Settings → Translation service to hear it through the model. Until then, this speaker still gets translations into %1$s.</string>
     <string name="interpret_heard_by_model">Heard through your model</string>
-    <string name="interpret_cloud_not_ready">To hear %1$s, SnipDo sends the speech to your model. That needs an API key, a model, and Supports audio input turned on in Settings → API.</string>
+    <string name="interpret_cloud_not_ready">To hear %1$s, SnipDo sends the speech to your model. That needs an API key, a model, and Supports audio input turned on in Settings → Translation service.</string>
     <string name="interpret_cloud_failed">Your model couldn\'t write down what was said: %1$s</string>
     <string name="interpret_cannot_hear">Can\'t be heard on this phone</string>
     <string name="interpret_network">Speech recognition couldn\'t reach its service. Check the connection and try again.</string>
     <string name="interpret_recognition_failed">Speech recognition stopped working. Try again.</string>
     <string name="interpret_idle_stopped">Stopped listening after a minute without speech.</string>
     <string name="interpret_no_voice">This phone has no voice for %1$s, so it isn\'t read aloud.</string>
+
+    <string name="action_paste">Paste</string>
+    <string name="action_share">Share</string>
+    <string name="action_add">Add</string>
+    <string name="action_swap_languages">Swap languages</string>
+    <string name="home_recent">Recent</string>
+    <string name="home_see_all">See all</string>
+    <string name="setup_title">Get set up · %1$d of %2$d</string>
+    <string name="setup_hide">Hide the setup steps</string>
+    <string name="setup_service_done">Translation service connected</string>
+    <string name="setup_service_todo">Connect a translation service</string>
+    <string name="setup_service_todo_hint">Add your API key and choose a model</string>
+    <string name="setup_service_action">Set up</string>
+    <string name="setup_tile_done">Select on screen tile added</string>
+    <string name="setup_tile_done_hint">Open Quick Settings and tap it over any app</string>
+    <string name="setup_tile_todo">Translate anything on screen</string>
+    <string name="setup_tile_todo_hint">Add the Select on screen tile to Quick Settings</string>
+    <string name="tool_expand">Expand the toolbar</string>
+    <string name="order_reading_short">Reading</string>
+    <string name="order_selection_short">As picked</string>
+    <string name="interpret_step_languages">Choose each speaker\'s language above their button.</string>
+    <string name="interpret_step_talk">Tap a button to talk and tap it again to stop, or hold it while you talk.</string>
+    <string name="interpret_step_result">Each sentence is translated for the other speakers, and read aloud when Read aloud is on.</string>
+    <string name="settings_service">Translation service</string>
+    <string name="settings_service_key_saved">API key saved</string>
+    <string name="settings_service_no_key">No API key yet</string>
+    <string name="settings_service_no_model">No model chosen yet</string>
+    <string name="settings_show_key">Show the API key</string>
+    <string name="settings_hide_key">Hide the API key</string>
+    <string name="settings_tile_select">Select on screen tile</string>
+    <string name="settings_tile_clipboard">Translate clipboard tile</string>
+    <string name="settings_tile_in_qs">In Quick Settings</string>
+    <string name="settings_tile_not_yet">Not added yet</string>
+    <string name="settings_tile_manual">Add it from the Quick Settings editor</string>
+    <string name="settings_capture_direct">Capture without asking</string>
+    <string name="settings_accessibility_on">Accessibility service · On</string>
+    <string name="settings_accessibility_off">Accessibility service · Off</string>
+    <string name="settings_selection_how_title">How it works</string>
+    <string name="settings_selection_privacy_short">One screenshot per tap, kept in memory on this phone. Only the words you select are sent.</string>
+    <string name="settings_app">App</string>
+    <string name="settings_update_available">Settings, update available</string>
+    <string name="history_search">Search history</string>
+    <string name="history_no_match">No matches</string>
+    <string name="history_clear_confirm">Clear all history?</string>
+    <string name="history_clear_body">This removes every saved translation from this phone.</string>
 </resources>

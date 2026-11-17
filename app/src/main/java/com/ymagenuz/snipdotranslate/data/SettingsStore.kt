@@ -52,6 +52,10 @@ data class AppSettings(
     // Empty until the speakers are first changed; until then they follow the phone's language.
     val interpretSpeakers: List<SpeakerSetup> = emptyList(),
     val interpretReadAloud: Boolean = true,
+    // Whether each Quick Settings tile is known to be added, from the tile services and the add requests.
+    val selectTileAdded: Boolean = false,
+    val clipboardTileAdded: Boolean = false,
+    val setupDismissed: Boolean = false,
 ) {
     fun configFor(providerId: String): ApiProviderConfig =
         apiConfigs[providerId] ?: providerDefaultConfig(providerId)
@@ -105,6 +109,9 @@ class SettingsStore(
         toolbarY = preferences[TOOLBAR_Y] ?: -1f,
         interpretSpeakers = decodeSpeakers(preferences[INTERPRET_SPEAKERS]).orEmpty(),
         interpretReadAloud = preferences[INTERPRET_READ_ALOUD] ?: true,
+        selectTileAdded = preferences[SELECT_TILE_ADDED] ?: false,
+        clipboardTileAdded = preferences[CLIPBOARD_TILE_ADDED] ?: false,
+        setupDismissed = preferences[SETUP_DISMISSED] ?: false,
     )
 
     private fun decodeConfigs(text: String?): Map<String, ApiProviderConfig> {
@@ -151,6 +158,9 @@ class SettingsStore(
         preferences[TOOLBAR_X] = settings.toolbarX
         preferences[TOOLBAR_Y] = settings.toolbarY
         preferences[INTERPRET_READ_ALOUD] = settings.interpretReadAloud
+        preferences[SELECT_TILE_ADDED] = settings.selectTileAdded
+        preferences[CLIPBOARD_TILE_ADDED] = settings.clipboardTileAdded
+        preferences[SETUP_DISMISSED] = settings.setupDismissed
         if (settings.interpretSpeakers.isEmpty()) {
             preferences.remove(INTERPRET_SPEAKERS)
         } else {
@@ -176,5 +186,8 @@ class SettingsStore(
         val TOOLBAR_Y = floatPreferencesKey("toolbar_y")
         val INTERPRET_SPEAKERS = stringPreferencesKey("interpret_speakers")
         val INTERPRET_READ_ALOUD = booleanPreferencesKey("interpret_read_aloud")
+        val SELECT_TILE_ADDED = booleanPreferencesKey("select_tile_added")
+        val CLIPBOARD_TILE_ADDED = booleanPreferencesKey("clipboard_tile_added")
+        val SETUP_DISMISSED = booleanPreferencesKey("setup_dismissed")
     }
 }

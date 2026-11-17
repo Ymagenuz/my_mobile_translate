@@ -10,8 +10,8 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -31,18 +31,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -58,11 +62,10 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -70,6 +73,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
@@ -82,6 +86,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -104,16 +109,18 @@ import com.ymagenuz.snipdotranslate.domain.RunError
 import com.ymagenuz.snipdotranslate.domain.Utterance
 import kotlinx.coroutines.flow.StateFlow
 
-private val TALK_BUTTON_HEIGHT = 76.dp
+private val TALK_BUTTON_HEIGHT = 84.dp
 private val ADD_BUTTON_WIDTH = 56.dp
 // Three speakers and + fit side by side on a phone about 410 dp wide; more scroll.
 private val MIN_TALK_BUTTON_WIDTH = 96.dp
-private val TALK_BUTTON_SHAPE = RoundedCornerShape(20.dp)
+private val TALK_BUTTON_SHAPE = RoundedCornerShape(24.dp)
+private val BUBBLE_MAX_WIDTH = 320.dp
 
-// One colour per speaker letter, readable with white text on top.
+// One colour per speaker letter, readable with white text on top. The first two are the
+// app's own blue and teal.
 private val SPEAKER_COLORS = listOf(
-    Color(0xFF2F6FED),
-    Color(0xFF00897B),
+    Color(0xFF2A64E6),
+    Color(0xFF00796B),
     Color(0xFFE8710A),
     Color(0xFF8E44AD),
     Color(0xFFC2185B),
@@ -122,11 +129,11 @@ private val SPEAKER_COLORS = listOf(
 
 private fun speakerColor(letter: Char): Color = SPEAKER_COLORS[(letter - 'A').coerceIn(0, SPEAKER_COLORS.lastIndex)]
 
-/** The speaker's colour for text and marks on the page's background. */
+/** The speaker's colour for text and marks on the page, lighter or darker so it stays readable there. */
 @Composable
 private fun speakerAccent(letter: Char): Color {
     val color = speakerColor(letter)
-    return if (isSystemInDarkTheme()) lerp(color, Color.White, 0.35f) else color
+    return if (isSystemInDarkTheme()) lerp(color, Color.White, 0.4f) else lerp(color, Color.Black, 0.18f)
 }
 
 @Composable
@@ -174,25 +181,25 @@ fun InterpretScreen(viewModel: InterpretViewModel, onBack: () -> Unit, onOpenSet
     KeepScreenOn()
 
     Column(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp),
-        ) {
-            TextButton(onClick = onBack) { Text(stringResource(R.string.action_back)) }
-            Text(
-                stringResource(R.string.title_interpret),
-                style = MaterialTheme.typography.titleLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
-            FilterChip(
-                selected = state.readAloud,
-                onClick = { viewModel.setReadAloud(!state.readAloud) },
-                label = { Text(stringResource(R.string.interpret_read_aloud)) },
-            )
+        ScreenTopBar(stringResource(R.string.title_interpret), onBack, stringResource(R.string.action_back)) {
+            FilledTonalIconToggleButton(
+                checked = state.readAloud,
+                onCheckedChange = viewModel::setReadAloud,
+                colors = IconButtonDefaults.filledTonalIconToggleButtonColors(
+                    containerColor = Color.Transparent,
+                    checkedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    checkedContentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                ),
+            ) {
+                Icon(
+                    if (state.readAloud) AppIcons.Speaker else AppIcons.SpeakerOff,
+                    contentDescription = stringResource(R.string.interpret_read_aloud),
+                )
+            }
             if (state.utterances.isNotEmpty()) {
-                TextButton(onClick = session::clear) { Text(stringResource(R.string.action_clear)) }
+                IconButton(onClick = session::clear) {
+                    Icon(AppIcons.Trash, contentDescription = stringResource(R.string.action_clear))
+                }
             }
         }
 
@@ -276,36 +283,49 @@ private fun NoticeBanner(notice: InterpretNotice, onDismiss: () -> Unit, onOpenS
     }
     Surface(
         color = MaterialTheme.colorScheme.secondaryContainer,
-        shape = RoundedCornerShape(12.dp),
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        shape = MaterialTheme.shapes.medium,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 12.dp)) {
-            Text(message, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f).padding(vertical = 8.dp))
+        Column {
+            Row(verticalAlignment = Alignment.Top, modifier = Modifier.padding(start = 12.dp)) {
+                Icon(AppIcons.Info, contentDescription = null, modifier = Modifier.padding(top = 12.dp).size(18.dp))
+                Text(
+                    message,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.weight(1f).padding(start = 8.dp, top = 12.dp, bottom = 8.dp),
+                )
+                IconButton(onClick = onDismiss) {
+                    Icon(AppIcons.Close, contentDescription = stringResource(R.string.action_close), modifier = Modifier.size(18.dp))
+                }
+            }
             // Microphone problems are fixed in App info: SnipDo's own, or the recognition app's.
             val appInfoFor = when (notice) {
                 InterpretNotice.NeedMicrophone -> context.packageName
                 is InterpretNotice.EngineNeedsMicrophone -> notice.engine.packageName
                 else -> null
             }
-            // Hearing a language through the model is set up in Settings → API.
+            // Hearing a language through the model is set up on the translation service's page.
             val needsSettings = notice is InterpretNotice.CloudNotReady ||
                 notice is InterpretNotice.LanguageUnsupported ||
                 notice == InterpretNotice.NoRecognizer
-            if (needsSettings) {
-                TextButton(onClick = onOpenSettings) { Text(stringResource(R.string.title_settings)) }
+            if (needsSettings || appInfoFor != null) {
+                Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth().padding(end = 4.dp)) {
+                    if (needsSettings) {
+                        TextButton(onClick = onOpenSettings) { Text(stringResource(R.string.title_settings)) }
+                    }
+                    if (appInfoFor != null) {
+                        TextButton(
+                            onClick = {
+                                openSettingsPage(
+                                    context,
+                                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$appInfoFor")),
+                                )
+                            },
+                        ) { Text(stringResource(R.string.settings_open_app_info)) }
+                    }
+                }
             }
-            if (appInfoFor != null) {
-                TextButton(
-                    onClick = {
-                        openSettingsPage(
-                            context,
-                            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$appInfoFor")),
-                        )
-                    },
-                ) { Text(stringResource(R.string.settings_open_app_info)) }
-            }
-            val close = stringResource(R.string.action_close)
-            TextButton(onClick = onDismiss, modifier = Modifier.semantics { contentDescription = close }) { Text("✕") }
         }
     }
 }
@@ -326,135 +346,208 @@ private fun Conversation(
     modifier: Modifier,
 ) {
     if (state.utterances.isEmpty()) {
-        Box(modifier.padding(32.dp), contentAlignment = Alignment.Center) {
-            Text(
-                stringResource(R.string.interpret_empty),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-        }
+        EmptyGuide(modifier)
         return
     }
     val listState = rememberLazyListState()
     val newest = state.utterances.last().id
     // Newest at the bottom; a growing translation stays in view there.
     LaunchedEffect(newest) { listState.animateScrollToItem(0) }
+    // Two speakers read as a conversation: the first on the left, the second on the right.
+    val second = state.speakers.takeIf { it.size == 2 }?.get(1)?.letter
     LazyColumn(
         state = listState,
         reverseLayout = true,
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        // A short conversation sits at the bottom, next to the buttons that continue it.
+        verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Bottom),
         modifier = modifier,
     ) {
         items(state.utterances.asReversed(), key = { it.id }) { utterance ->
-            UtteranceCard(utterance, state.reading, onReplay, onOpenSettings)
+            UtteranceBubble(utterance, atEnd = utterance.letter == second, state.reading, onReplay, onOpenSettings)
+        }
+    }
+}
+
+/** How the page works, in three steps, until someone has spoken. */
+@Composable
+private fun EmptyGuide(modifier: Modifier) {
+    Box(modifier.padding(24.dp), contentAlignment = Alignment.Center) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.widthIn(max = 340.dp)) {
+            GuideStep(AppIcons.Globe, stringResource(R.string.interpret_step_languages))
+            GuideStep(AppIcons.Mic, stringResource(R.string.interpret_step_talk))
+            GuideStep(AppIcons.Speaker, stringResource(R.string.interpret_step_result))
         }
     }
 }
 
 @Composable
-private fun UtteranceCard(
+private fun GuideStep(icon: ImageVector, text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+        IconBadge(icon)
+        Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun SpeakerBadge(letter: Char) {
+    val name = speakerName(letter)
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(28.dp)
+            .background(speakerColor(letter), CircleShape)
+            .semantics { contentDescription = name },
+    ) {
+        Text(
+            letter.toString(),
+            color = Color.White,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.clearAndSetSemantics { },
+        )
+    }
+}
+
+@Composable
+private fun UtteranceBubble(
     utterance: Utterance,
+    atEnd: Boolean,
     reading: Reading?,
     onReplay: (Long, String) -> Unit,
     onOpenSettings: () -> Unit,
 ) {
     val accent = speakerAccent(utterance.letter)
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = RoundedCornerShape(12.dp),
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp, if (atEnd) Alignment.End else Alignment.Start),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = Modifier
-                .drawBehind { drawRect(accent, size = Size(4.dp.toPx(), size.height)) }
-                .padding(start = 16.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
+        if (!atEnd) SpeakerBadge(utterance.letter)
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            // The corner beside the speaker's letter is the square one.
+            shape = RoundedCornerShape(
+                topStart = if (atEnd) 20.dp else 4.dp,
+                topEnd = if (atEnd) 4.dp else 20.dp,
+                bottomEnd = 20.dp,
+                bottomStart = 20.dp,
+            ),
+            modifier = Modifier.weight(1f, fill = false).widthIn(max = BUBBLE_MAX_WIDTH),
         ) {
-            Text(
-                "${speakerName(utterance.letter)} · ${languageName(utterance.language)}",
-                style = MaterialTheme.typography.labelMedium,
-                color = accent,
-            )
-            SelectionContainer {
-                Text(
-                    utterance.text,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontStyle = if (utterance.final) FontStyle.Normal else FontStyle.Italic,
-                    color = if (utterance.final) {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    } else {
-                        MaterialTheme.colorScheme.outline
-                    },
-                )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.padding(start = 14.dp, end = 6.dp, top = 12.dp, bottom = 10.dp),
+            ) {
+                SelectionContainer {
+                    Text(
+                        utterance.text,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontStyle = if (utterance.final) FontStyle.Normal else FontStyle.Italic,
+                        color = if (utterance.final) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.outline
+                        },
+                        modifier = Modifier.padding(end = 8.dp),
+                    )
+                }
+                if (!utterance.final) HearingDots(accent)
+                utterance.renditions.forEach { rendition ->
+                    RenditionView(
+                        rendition = rendition,
+                        // With one other speaker there's only one language it could be.
+                        showLanguage = utterance.renditions.size > 1,
+                        beingRead = reading == Reading(utterance.id, rendition.language),
+                        accent = accent,
+                        onReplay = { onReplay(utterance.id, rendition.language) },
+                        onOpenSettings = onOpenSettings,
+                    )
+                }
+                if (utterance.final && utterance.renditions.isEmpty()) {
+                    Text(
+                        stringResource(R.string.interpret_nothing_to_translate),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.outline,
+                        modifier = Modifier.padding(end = 8.dp),
+                    )
+                }
             }
-            utterance.renditions.forEach { rendition ->
-                RenditionView(
-                    rendition = rendition,
-                    beingRead = reading == Reading(utterance.id, rendition.language),
-                    onReplay = { onReplay(utterance.id, rendition.language) },
-                    onOpenSettings = onOpenSettings,
-                )
-            }
-            if (utterance.final && utterance.renditions.isEmpty()) {
-                Text(
-                    stringResource(R.string.interpret_nothing_to_translate),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline,
-                )
-            }
+        }
+        if (atEnd) SpeakerBadge(utterance.letter)
+    }
+}
+
+/** Three dots under words that are still being heard. */
+@Composable
+private fun HearingDots(color: Color) {
+    Row(horizontalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.padding(vertical = 4.dp)) {
+        listOf(1f, 0.6f, 0.3f).forEach { strength ->
+            Box(Modifier.size(6.dp).background(color.copy(alpha = strength), CircleShape))
         }
     }
 }
 
 @Composable
-private fun RenditionView(rendition: Rendition, beingRead: Boolean, onReplay: () -> Unit, onOpenSettings: () -> Unit) {
+private fun RenditionView(
+    rendition: Rendition,
+    showLanguage: Boolean,
+    beingRead: Boolean,
+    accent: Color,
+    onReplay: () -> Unit,
+    onOpenSettings: () -> Unit,
+) {
     Column {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        if (showLanguage) {
             Text(
                 stringResource(R.string.interpret_into, languageName(rendition.language)),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.tertiary,
-                modifier = Modifier.weight(1f),
             )
-            if (rendition.status == RenditionStatus.DONE && rendition.text.isNotBlank()) {
-                val readAgain = stringResource(R.string.interpret_read_again)
-                TextButton(
-                    onClick = onReplay,
-                    contentPadding = PaddingValues(horizontal = 8.dp),
-                    modifier = Modifier.height(32.dp).semantics { contentDescription = readAgain },
-                ) { Text("🔊") }
-            }
         }
-        when {
-            rendition.text.isNotEmpty() -> SelectionContainer {
-                Text(
-                    rendition.text,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = if (beingRead) {
-                        Modifier
-                            .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.14f), RoundedCornerShape(6.dp))
-                            .padding(horizontal = 4.dp)
-                    } else {
-                        Modifier
-                    },
-                )
+        Row(verticalAlignment = Alignment.Top) {
+            Box(modifier = Modifier.weight(1f, fill = false).padding(top = 6.dp, end = 4.dp)) {
+                when {
+                    rendition.text.isNotEmpty() -> SelectionContainer {
+                        Text(
+                            rendition.text,
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp, lineHeight = 26.sp),
+                            modifier = if (beingRead) {
+                                Modifier
+                                    .background(MaterialTheme.colorScheme.tertiaryContainer, RoundedCornerShape(6.dp))
+                                    .padding(horizontal = 4.dp)
+                            } else {
+                                Modifier
+                            },
+                        )
+                    }
+                    rendition.status == RenditionStatus.RUNNING -> Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(end = 8.dp, bottom = 6.dp),
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(14.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                        Text(
+                            stringResource(R.string.action_translating),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                    }
+                }
             }
-            rendition.status == RenditionStatus.RUNNING -> Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(14.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.tertiary,
-                )
-                Text(
-                    stringResource(R.string.action_translating),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.tertiary,
-                )
+            if (rendition.status == RenditionStatus.DONE && rendition.text.isNotBlank()) {
+                IconButton(onClick = onReplay, modifier = Modifier.size(40.dp)) {
+                    Icon(
+                        AppIcons.Speaker,
+                        contentDescription = stringResource(R.string.interpret_read_again),
+                        tint = if (beingRead) MaterialTheme.colorScheme.tertiary else accent,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
             }
         }
         if (rendition.status == RenditionStatus.FAILED) {
@@ -468,6 +561,7 @@ private fun RenditionView(rendition: Rendition, beingRead: Boolean, onReplay: ()
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(end = 8.dp),
             )
             if (error == RunError.NoKey || error == RunError.NoModel) {
                 TextButton(onClick = onOpenSettings, contentPadding = PaddingValues(0.dp)) {
@@ -487,8 +581,13 @@ private fun SpeakerBar(
     onRemove: (Char) -> Unit,
     onAdd: () -> Unit,
 ) {
-    Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
-        BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        BoxWithConstraints(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 12.dp)) {
             val canAdd = state.speakers.size < MAX_SPEAKERS
             val gap = 8.dp
             val count = state.speakers.size.coerceAtLeast(1)
@@ -520,12 +619,13 @@ private fun SpeakerBar(
                     OutlinedButton(
                         onClick = onAdd,
                         shape = TALK_BUTTON_SHAPE,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                         contentPadding = PaddingValues(0.dp),
                         modifier = Modifier
                             .width(ADD_BUTTON_WIDTH)
                             .height(TALK_BUTTON_HEIGHT)
                             .semantics { contentDescription = add },
-                    ) { Text("+", style = MaterialTheme.typography.headlineSmall) }
+                    ) { Icon(AppIcons.Plus, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
             }
         }
@@ -553,11 +653,13 @@ private fun SpeakerControl(
             // Removing is right there, not only at the end of the language menu.
             if (canRemove) {
                 val remove = stringResource(R.string.interpret_remove_speaker, speaker.letter.toString())
-                IconButton(
-                    onClick = onRemove,
-                    modifier = Modifier.size(32.dp).semantics { contentDescription = remove },
-                ) {
-                    Text("✕", color = MaterialTheme.colorScheme.outline, style = MaterialTheme.typography.titleSmall)
+                IconButton(onClick = onRemove, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        AppIcons.Close,
+                        contentDescription = remove,
+                        tint = MaterialTheme.colorScheme.outline,
+                        modifier = Modifier.size(16.dp),
+                    )
                 }
             }
         }
@@ -576,8 +678,20 @@ private fun LanguageMenu(
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box {
-        TextButton(onClick = { expanded = true }, contentPadding = PaddingValues(horizontal = 4.dp)) {
-            Text("${languageName(speaker.language)} ▾", maxLines = 1, overflow = TextOverflow.Ellipsis)
+        TextButton(onClick = { expanded = true }, contentPadding = PaddingValues(start = 10.dp, end = 4.dp)) {
+            Text(
+                languageName(speaker.language),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            Icon(
+                AppIcons.ChevronDown,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 2.dp).size(18.dp),
+            )
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             INTERPRET_LANGUAGES.forEach { code ->
@@ -656,8 +770,7 @@ private fun TalkButton(letter: Char, unheard: Boolean, listening: Listening?, le
                 // Still pressable, to explain why it can't listen.
                 alpha = if (unheard) 0.6f else 1f
             }
-            .background(if (active) color else color.copy(alpha = 0.12f), TALK_BUTTON_SHAPE)
-            .border(1.dp, color.copy(alpha = if (active) 1f else 0.5f), TALK_BUTTON_SHAPE)
+            .background(if (active) color else color.copy(alpha = 0.14f), TALK_BUTTON_SHAPE)
             .semantics(mergeDescendants = true) {
                 role = Role.Button
                 stateDescription = hint
@@ -693,13 +806,17 @@ private fun TalkButton(letter: Char, unheard: Boolean, listening: Listening?, le
             },
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(horizontal = 8.dp)) {
-            Text(
-                name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = if (active) Color.White else speakerAccent(letter),
-                maxLines = 1,
-            )
+            val ink = if (active) Color.White else speakerAccent(letter)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Icon(AppIcons.Mic, contentDescription = null, tint = ink, modifier = Modifier.size(20.dp))
+                Text(
+                    name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = ink,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             Spacer(Modifier.height(2.dp))
             Text(
                 hint,

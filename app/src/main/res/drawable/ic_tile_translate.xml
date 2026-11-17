@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- A clipboard holding the two arrows of a translation. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
     <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M5,8h10V5l5,4.5L15,14v-3H5zM19,16H9v3l-5,-4.5L9,10v3h10z" />
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M9,4.5H7a2,2 0,0 0,-2 2V19a2,2 0,0 0,2 2h10a2,2 0,0 0,2 -2V6.5a2,2 0,0 0,-2 -2h-2M9,3h6v3.5H9zM8.5,11.5h6M12.5,9.5l2,2 -2,2M15.5,16h-6M11.5,14l-2,2 2,2" />
 </vector>

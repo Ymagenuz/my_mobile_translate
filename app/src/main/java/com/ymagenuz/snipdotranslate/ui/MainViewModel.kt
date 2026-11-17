@@ -12,6 +12,8 @@ import com.ymagenuz.snipdotranslate.core.API_PROVIDERS
 import com.ymagenuz.snipdotranslate.core.ApiProviderConfig
 import com.ymagenuz.snipdotranslate.core.HistoryEntry
 import com.ymagenuz.snipdotranslate.core.ReleaseInfo
+import com.ymagenuz.snipdotranslate.core.SOURCE_AUTO
+import com.ymagenuz.snipdotranslate.core.TARGET_DEFAULT
 import com.ymagenuz.snipdotranslate.core.TranslationMode
 import com.ymagenuz.snipdotranslate.core.apiProvider
 import com.ymagenuz.snipdotranslate.core.isDownloadableRelease
@@ -44,7 +46,12 @@ data class ApiDraft(
     val supportsAudio: Boolean = false,
 )
 
-enum class Route { TRANSLATE, HISTORY, SETTINGS, INTERPRET }
+enum class Route { TRANSLATE, HISTORY, SETTINGS, API, SELECTION, INTERPRET }
+
+/** How the chosen translation service stands, for the setup card and Settings. */
+data class ServiceStatus(val providerName: String, val model: String, val hasKey: Boolean) {
+    val ready: Boolean get() = hasKey && model.isNotEmpty()
+}
 
 sealed interface UpdateStatus {
     data object Idle : UpdateStatus
@@ -92,6 +99,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Kept here so that rotating or changing language stays on the same page. */
     var route by mutableStateOf(Route.TRANSLATE)
+        private set
+    private val earlierPages = ArrayDeque<Route>()
+
+    /** Unknown until the saved key has been looked up. */
+    var service by mutableStateOf<ServiceStatus?>(null)
+        private set
     var update by mutableStateOf<ReleaseInfo?>(null)
         private set
     var updateStatus by mutableStateOf<UpdateStatus>(UpdateStatus.Idle)
@@ -102,12 +115,37 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         viewModelScope.launch { app.historyStore.load() }
+        refreshService()
         viewModelScope.launch(Dispatchers.IO) { UpdateInstaller.removeStale(app, BuildConfig.VERSION_NAME) }
         viewModelScope.launch {
             val saved = app.settingsStore.current()
             if (saved.updateWasAvailable || isUpdateCheckDue(saved.lastUpdateCheckMs, System.currentTimeMillis())) {
                 runUpdateCheck(showStatus = false)
             }
+        }
+    }
+
+    fun open(page: Route) {
+        if (page == route) return
+        earlierPages.addLast(route)
+        route = page
+    }
+
+    /** Goes back a page; false on the first one, where Back leaves the app. */
+    fun back(): Boolean {
+        route = earlierPages.removeLastOrNull() ?: return false
+        return true
+    }
+
+    fun home() {
+        earlierPages.clear()
+        route = Route.TRANSLATE
+    }
+
+    private fun refreshService() {
+        viewModelScope.launch {
+            val provider = app.settingsStore.current().resolvedProvider()
+            service = ServiceStatus(provider.shortName, provider.model, app.keyVault.read(provider.providerId).isNotEmpty())
         }
     }
 
@@ -186,6 +224,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         input = ""
         session.clear()
     }
+
+    /** Puts clipboard text in the box, after anything already typed. */
+    fun paste(text: String) {
+        input = if (input.isBlank()) text else input.trimEnd() + '\n' + text
+    }
+
+    /** Swapping needs a language on both sides, not one that is worked out from the text. */
+    fun canSwapLanguages(current: AppSettings): Boolean =
+        current.sourceLanguage != SOURCE_AUTO && current.targetLanguage != TARGET_DEFAULT
+
+    fun swapLanguages() = updateSettings {
+        if (canSwapLanguages(it)) it.copy(sourceLanguage = it.targetLanguage, targetLanguage = it.sourceLanguage) else it
+    }
+
+    fun dismissSetup() = updateSettings { it.copy(setupDismissed = true) }
+
+    fun noteTile(selectOnScreen: Boolean, added: Boolean) = app.noteTile(selectOnScreen, added)
 
     fun setSourceLanguage(code: String) = updateSettings { it.copy(sourceLanguage = code) }
 
@@ -292,6 +347,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         app.settingsStore.update { it.copy(apiProvider = selected, apiConfigs = configs) }
+        refreshService()
         return SaveResult.Saved
     }
 

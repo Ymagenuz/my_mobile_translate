@@ -21,8 +21,13 @@ import com.ymagenuz.snipdotranslate.update.UpdateChecker
 import com.ymagenuz.snipdotranslate.update.UpdateDownloader
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class SnipDoApp : Application() {
+    // For small writes that must finish after the screen or service that asked has gone.
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val http by lazy { createHttpClient() }
     val chatClient by lazy { ChatClient(http) }
     val updateChecker by lazy { UpdateChecker(http, BuildConfig.VERSION_NAME) }
@@ -52,6 +57,19 @@ class SnipDoApp : Application() {
         backTranslationEnabled = { settingsStore.current().backTranslation },
         onFinished = historyStore::add,
     )
+
+    /** Remembers whether a Quick Settings tile is added, for the setup card and Settings. */
+    fun noteTile(selectOnScreen: Boolean, added: Boolean) {
+        appScope.launch {
+            settingsStore.update {
+                when {
+                    selectOnScreen && it.selectTileAdded != added -> it.copy(selectTileAdded = added)
+                    !selectOnScreen && it.clipboardTileAdded != added -> it.copy(clipboardTileAdded = added)
+                    else -> it
+                }
+            }
+        }
+    }
 
     suspend fun providerAccess(): ProviderAccess {
         val provider = settingsStore.current().resolvedProvider()

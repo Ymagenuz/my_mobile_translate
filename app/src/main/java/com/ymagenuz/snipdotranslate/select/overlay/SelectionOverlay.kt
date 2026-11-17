@@ -19,18 +19,20 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -38,13 +40,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -54,7 +53,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.Insets
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -78,11 +76,17 @@ import com.ymagenuz.snipdotranslate.select.core.WordOrder
 import com.ymagenuz.snipdotranslate.select.core.bottom
 import com.ymagenuz.snipdotranslate.select.core.center
 import com.ymagenuz.snipdotranslate.select.core.inReadingOrder
+import com.ymagenuz.snipdotranslate.ui.AppIcons
+import com.ymagenuz.snipdotranslate.ui.CaptionAction
 import com.ymagenuz.snipdotranslate.ui.MainActivity
+import com.ymagenuz.snipdotranslate.ui.ResultActionBar
 import com.ymagenuz.snipdotranslate.ui.ResultActions
 import com.ymagenuz.snipdotranslate.ui.ResultPane
 import com.ymagenuz.snipdotranslate.ui.SheetFrame
 import com.ymagenuz.snipdotranslate.ui.SnipDoTheme
+import com.ymagenuz.snipdotranslate.ui.SourceEditor
+import com.ymagenuz.snipdotranslate.ui.SourcePreview
+import com.ymagenuz.snipdotranslate.ui.shareText
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -306,6 +310,7 @@ class SelectionOverlay(
         toolbar.canRedo = current?.canRedo == true
         toolbar.hasSelection = current?.hasSelection == true
         toolbar.hasText = toolbar.hasSelection || !collected.isEmpty
+        toolbar.count = (current?.selectedIds?.size ?: 0) + collected.words.size
         // Also offered with nothing new selected yet, to scroll further before capturing again.
         canContinue = onContinue != null && (reachesBottom(current) || (!collected.isEmpty && !toolbar.hasSelection))
     }
@@ -482,6 +487,12 @@ class SelectionOverlay(
         }
     }
 
+    /** Hands the translation to Android's share sheet, which would open under a selection left up. */
+    private fun share(text: String) {
+        shareText(context, text, newTask = true)
+        close()
+    }
+
     private fun openSettings() {
         context.startActivity(
             Intent(context, MainActivity::class.java)
@@ -571,9 +582,9 @@ class SelectionOverlay(
     @Composable
     private fun Pill(part: Int?, modifier: Modifier) {
         Surface(
-            shape = RoundedCornerShape(50),
-            shadowElevation = 4.dp,
-            tonalElevation = 3.dp,
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            shadowElevation = 6.dp,
             modifier = modifier.alpha(if (toolbar.strokeActive) 0.2f else 1f),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 6.dp)) {
@@ -581,11 +592,15 @@ class SelectionOverlay(
                     Text(
                         stringResource(R.string.continue_part, it),
                         style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp),
                     )
                 }
                 if (canContinue) {
-                    TextButton(onClick = ::continueBelow) { Text(stringResource(R.string.continue_below)) }
+                    TextButton(onClick = ::continueBelow, modifier = Modifier.heightIn(min = 48.dp)) {
+                        Text(stringResource(R.string.continue_below))
+                        Icon(AppIcons.ArrowDown, contentDescription = null, modifier = Modifier.padding(start = 6.dp).size(20.dp))
+                    }
                 }
             }
         }
@@ -623,79 +638,73 @@ class SelectionOverlay(
     private fun ResultSheet() {
         val state by session.state.collectAsStateWithLifecycle()
         val current by settings.collectAsStateWithLifecycle()
-        SheetFrame(onDismiss = ::dismissSheet) {
+        val actions = ResultActions(
+            onStop = session::stop,
+            onRetry = session::retry,
+            onStopBack = session::stopBackTranslation,
+            onOpenSettings = ::openSettings,
+            backTranslationOn = current.backTranslation,
+            onToggleBack = ::setBackTranslation,
+            onShare = ::share,
+        )
+        val resultShown = !readingImage && showResult && state.status != RunStatus.IDLE
+        val bar: (@Composable () -> Unit)? = if (resultShown) {
+            {
+                ResultActionBar(
+                    state = state,
+                    actions = actions,
+                    onOpenInApp = if (!editing && state.request != null) ::openInApp else null,
+                )
+            }
+        } else {
+            null
+        }
+        SheetFrame(onDismiss = ::dismissSheet, bottomBar = bar) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .navigationBarsPadding()
+                    // Without the bar below, the content itself keeps clear of the navigation bar.
+                    .then(if (resultShown) Modifier else Modifier.navigationBarsPadding())
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(start = 20.dp, end = 12.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 if (readingImage) {
-                    CircularProgressIndicator()
-                    Text(stringResource(R.string.selection_reading_image))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.padding(vertical = 12.dp),
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.5.dp)
+                        Text(stringResource(R.string.selection_reading_image))
+                    }
                 } else {
                     val label = stringResource(if (fromImage) R.string.label_from_image else R.string.label_original)
                     if (editing) {
-                        SourceEditor(label)
+                        SourceEditor(
+                            label = label,
+                            draft = draft,
+                            onDraftChange = { draft = it },
+                            onTranslate = { translate(draft.text.trim()) },
+                            onCancel = ::cancelEditing,
+                        )
                     } else {
-                        state.request?.text?.takeIf { it.isNotEmpty() }?.let {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    label,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                )
-                                Spacer(Modifier.weight(1f))
-                                TextButton(onClick = ::editSource) { Text(stringResource(R.string.action_edit)) }
-                                TextButton(onClick = ::selectAgain) { Text(stringResource(R.string.action_select_again)) }
+                        state.request?.text?.takeIf { it.isNotEmpty() }?.let { source ->
+                            SourcePreview(label, source) {
+                                CaptionAction(AppIcons.Edit, stringResource(R.string.action_edit), ::editSource)
+                                CaptionAction(AppIcons.ScreenSelect, stringResource(R.string.action_select_again), ::selectAgain)
                             }
-                            Text(it, maxLines = 3, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyMedium)
                         }
                     }
-                    if (showResult && state.status != RunStatus.IDLE) {
-                        ResultPane(
-                            state = state,
-                            actions = ResultActions(
-                                onStop = session::stop,
-                                onRetry = session::retry,
-                                onStopBack = session::stopBackTranslation,
-                                onOpenSettings = ::openSettings,
-                                backTranslationOn = current.backTranslation,
-                                onToggleBack = ::setBackTranslation,
-                            ),
+                    if (resultShown) {
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                            modifier = Modifier.padding(top = 4.dp, end = 8.dp),
                         )
-                        if (!editing && state.request != null) {
-                            TextButton(onClick = ::openInApp) { Text(stringResource(R.string.action_open_in_app)) }
-                        }
+                        ResultPane(state = state, actions = actions, showActions = false, modifier = Modifier.padding(end = 8.dp))
                     }
                 }
             }
-        }
-    }
-
-    /** The source text in an editable field, translated again with the corrections. */
-    @Composable
-    private fun SourceEditor(label: String) {
-        val focus = remember { FocusRequester() }
-        LaunchedEffect(Unit) { focus.requestFocus() }
-        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-        OutlinedTextField(
-            value = draft,
-            onValueChange = { draft = it },
-            minLines = 2,
-            maxLines = 8,
-            textStyle = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focus),
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { translate(draft.text.trim()) }, enabled = draft.text.isNotBlank()) {
-                Text(stringResource(R.string.action_translate))
-            }
-            TextButton(onClick = ::cancelEditing) { Text(stringResource(R.string.action_cancel)) }
         }
     }
 }

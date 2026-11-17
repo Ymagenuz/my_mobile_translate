@@ -19,11 +19,6 @@ import java.io.File
 class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
     private val interpretViewModel: InterpretViewModel by viewModels()
-    private var route: Route
-        get() = viewModel.route
-        set(value) {
-            viewModel.route = value
-        }
     private var pendingCapture: Uri? = null
 
     override fun attachBaseContext(newBase: Context) {
@@ -64,24 +59,34 @@ class MainActivity : ComponentActivity() {
         setContent {
             SnipDoTheme {
                 Surface {
-                    BackHandler(enabled = route != Route.TRANSLATE) { route = Route.TRANSLATE }
-                    when (route) {
+                    val back: () -> Unit = { viewModel.back() }
+                    BackHandler(enabled = viewModel.route != Route.TRANSLATE, onBack = back)
+                    when (viewModel.route) {
                         Route.TRANSLATE -> TranslateScreen(
                             viewModel,
-                            onHistory = { route = Route.HISTORY },
-                            onSettings = { route = Route.SETTINGS },
-                            onInterpret = { route = Route.INTERPRET },
+                            onHistory = { viewModel.open(Route.HISTORY) },
+                            onSettings = { viewModel.open(Route.SETTINGS) },
+                            onApiSettings = { viewModel.open(Route.API) },
+                            onSelectionSettings = { viewModel.open(Route.SELECTION) },
+                            onInterpret = { viewModel.open(Route.INTERPRET) },
                             onTakePhoto = ::takePhoto,
                             onPickPhoto = {
                                 pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                             },
                         )
-                        Route.HISTORY -> HistoryScreen(viewModel) { route = Route.TRANSLATE }
-                        Route.SETTINGS -> SettingsScreen(viewModel) { route = Route.TRANSLATE }
+                        Route.HISTORY -> HistoryScreen(viewModel, onBack = back)
+                        Route.SETTINGS -> SettingsScreen(
+                            viewModel,
+                            onBack = back,
+                            onApi = { viewModel.open(Route.API) },
+                            onSelection = { viewModel.open(Route.SELECTION) },
+                        )
+                        Route.API -> ApiSettingsScreen(viewModel, onBack = back)
+                        Route.SELECTION -> SelectionSettingsScreen(onBack = back)
                         Route.INTERPRET -> InterpretScreen(
                             interpretViewModel,
-                            onBack = { route = Route.TRANSLATE },
-                            onOpenSettings = { route = Route.SETTINGS },
+                            onBack = back,
+                            onOpenSettings = { viewModel.open(Route.API) },
                         )
                     }
                 }
@@ -96,15 +101,19 @@ class MainActivity : ComponentActivity() {
 
     private fun applyIntent(intent: Intent) {
         if (intent.getBooleanExtra(EXTRA_OPEN_SETTINGS, false)) {
-            route = Route.SETTINGS
+            // Asked for where a translation had no key or model, which are set on the service's page.
+            viewModel.home()
+            viewModel.open(Route.SETTINGS)
+            viewModel.open(Route.API)
             intent.removeExtra(EXTRA_OPEN_SETTINGS)
         }
         if (intent.getBooleanExtra(EXTRA_OPEN_INTERPRET, false)) {
-            route = Route.INTERPRET
+            viewModel.home()
+            viewModel.open(Route.INTERPRET)
             intent.removeExtra(EXTRA_OPEN_INTERPRET)
         }
         val input = intent.getStringExtra(EXTRA_INPUT) ?: return
-        route = Route.TRANSLATE
+        viewModel.home()
         viewModel.receive(input, intent.getStringExtra(EXTRA_RESULT), intent.getStringExtra(EXTRA_MODE))
         intent.removeExtra(EXTRA_INPUT)
     }

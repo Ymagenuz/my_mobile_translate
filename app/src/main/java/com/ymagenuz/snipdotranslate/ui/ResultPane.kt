@@ -1,23 +1,26 @@
 package com.ymagenuz.snipdotranslate.ui
 
 import android.animation.ValueAnimator
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -33,7 +36,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownTypography
 import com.mikepenz.markdown.model.rememberMarkdownState
@@ -61,38 +67,30 @@ data class ResultActions(
     val onOpenSettings: () -> Unit,
     val backTranslationOn: Boolean,
     val onToggleBack: (Boolean) -> Unit,
+    val onShare: (String) -> Unit,
 )
 
-/** The translation and its back-translation; shared by the app, the popup and the overlay. */
+/**
+ * The translation and its back-translation; shared by the app, the popup and the overlay.
+ * With [showActions] off, the host shows [ResultActionBar] instead, fixed under a sheet.
+ */
 @Composable
 fun ResultPane(
     state: TranslationState,
     actions: ResultActions,
     modifier: Modifier = Modifier,
+    showActions: Boolean = true,
 ) {
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                resultLabel(state),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.tertiary,
-            )
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.heightIn(min = 32.dp)) {
+            SectionCaption(resultLabel(state), MaterialTheme.colorScheme.tertiary, Modifier.weight(1f))
             if (state.status == RunStatus.RUNNING) {
-                Spacer(Modifier.width(8.dp))
-                TextButton(onClick = actions.onStop) { Text(stringResource(R.string.action_stop)) }
-            }
-            Spacer(Modifier.weight(1f))
-            if (state.mode != TranslationMode.DICTIONARY) {
-                FilterChip(
-                    selected = actions.backTranslationOn,
-                    onClick = { actions.onToggleBack(!actions.backTranslationOn) },
-                    label = { Text(stringResource(R.string.back_translate)) },
-                )
+                PillButton(stringResource(R.string.action_stop), actions.onStop, icon = AppIcons.Stop)
             }
         }
 
         if (state.text.isNotEmpty()) {
-            MarkdownText(state.text, running = state.status == RunStatus.RUNNING)
+            MarkdownText(state.text, running = state.status == RunStatus.RUNNING, textSize = 18)
         } else if (state.status == RunStatus.RUNNING) {
             val waiting = if (state.mode == TranslationMode.DICTIONARY) R.string.action_looking_up else R.string.action_translating
             PendingNote(stringResource(waiting), MaterialTheme.colorScheme.tertiary)
@@ -108,8 +106,127 @@ fun ResultPane(
             else -> Unit
         }
 
-        if (state.text.isNotBlank() && state.status != RunStatus.RUNNING) CopyButton(state.text)
         BackTranslationPanel(state.back, actions.onStopBack)
+        if (showActions) InlineActions(state, actions)
+    }
+}
+
+/** The small capital label over a block of text: blue for the source, teal for the translation. */
+@Composable
+fun SectionCaption(text: String, color: Color, modifier: Modifier = Modifier) {
+    Text(
+        text,
+        style = MaterialTheme.typography.labelMedium,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 0.6.sp,
+        color = color,
+        modifier = modifier,
+    )
+}
+
+/** Copy, Share and the back-translation switch under a result on the main page. */
+@Composable
+private fun InlineActions(state: TranslationState, actions: ResultActions) {
+    val ready = state.status != RunStatus.RUNNING
+    val (copied, copy) = rememberCopy(state.text)
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        // Nothing to copy or share from a run that failed before any text came.
+        if (state.text.isNotBlank()) {
+            PillButton(
+                text = stringResource(if (copied) R.string.action_copied else R.string.action_copy),
+                onClick = copy,
+                icon = if (copied) AppIcons.Check else AppIcons.Copy,
+                enabled = ready,
+                container = MaterialTheme.colorScheme.tertiaryContainer,
+                content = MaterialTheme.colorScheme.onTertiaryContainer,
+            )
+            FilledTonalIconButton(onClick = { actions.onShare(state.text) }, enabled = ready) {
+                Icon(AppIcons.Share, contentDescription = stringResource(R.string.action_share), modifier = Modifier.size(20.dp))
+            }
+        }
+        // Takes what the buttons leave, so the switch after it keeps its whole label where there's room.
+        Spacer(Modifier.weight(1f))
+        if (state.mode != TranslationMode.DICTIONARY) {
+            FilterChip(
+                selected = actions.backTranslationOn,
+                onClick = { actions.onToggleBack(!actions.backTranslationOn) },
+                label = { Text(stringResource(R.string.back_translate), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                leadingIcon = { Icon(AppIcons.BackTranslate, contentDescription = null, modifier = Modifier.size(18.dp)) },
+            )
+        }
+    }
+}
+
+/**
+ * The same actions for a sheet, where they stay in reach under the text however long it is.
+ * [onOpenInApp] is left out where there's nothing to hand to the main page yet.
+ */
+@Composable
+fun ResultActionBar(
+    state: TranslationState,
+    actions: ResultActions,
+    onOpenInApp: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    val ready = state.text.isNotBlank() && state.status != RunStatus.RUNNING
+    val (copied, copy) = rememberCopy(state.text)
+    Column(modifier = modifier) {
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+        ) {
+            Button(onClick = copy, enabled = ready, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
+                Icon(
+                    if (copied) AppIcons.Check else AppIcons.Copy,
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 8.dp).size(20.dp),
+                )
+                Text(stringResource(if (copied) R.string.action_copied else R.string.action_copy), maxLines = 1)
+            }
+            FilledTonalIconButton(
+                onClick = { actions.onShare(state.text) },
+                enabled = ready,
+                modifier = Modifier.size(48.dp),
+            ) { Icon(AppIcons.Share, contentDescription = stringResource(R.string.action_share)) }
+            if (state.mode != TranslationMode.DICTIONARY) {
+                FilledTonalIconToggleButton(
+                    checked = actions.backTranslationOn,
+                    onCheckedChange = actions.onToggleBack,
+                    colors = IconButtonDefaults.filledTonalIconToggleButtonColors(
+                        checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ),
+                    modifier = Modifier.size(48.dp),
+                ) { Icon(AppIcons.BackTranslate, contentDescription = stringResource(R.string.back_translate)) }
+            }
+            if (onOpenInApp != null) {
+                FilledTonalIconButton(onClick = onOpenInApp, modifier = Modifier.size(48.dp)) {
+                    Icon(AppIcons.OpenInApp, contentDescription = stringResource(R.string.action_open_in_app))
+                }
+            }
+        }
+    }
+}
+
+/** Copies [text] and says so for a moment: whether it was just copied, and the action that copies. */
+@Composable
+private fun rememberCopy(text: String): Pair<Boolean, () -> Unit> {
+    val context = LocalContext.current
+    var copied by remember { mutableStateOf(false) }
+    LaunchedEffect(copied) {
+        if (copied) {
+            delay(COPIED_NOTE_MS)
+            copied = false
+        }
+    }
+    return copied to {
+        copyToClipboard(context, "translation", text)
+        copied = true
     }
 }
 
@@ -136,10 +253,10 @@ private class StreamedFlag {
 
 /**
  * Selectable, so part of a result can be copied. Text fades in while [running], and for the last chunk, which arrives as the run ends.
- * A finished result shown later, such as after rotating, appears at once.
+ * A finished result shown later, such as after rotating, appears at once. [textSize] is the body text's size in sp.
  */
 @Composable
-private fun MarkdownText(text: String, running: Boolean) {
+private fun MarkdownText(text: String, running: Boolean, textSize: Int) {
     val type = MaterialTheme.typography
     val streamed = remember { StreamedFlag() }
     if (running) streamed.value = true
@@ -150,19 +267,26 @@ private fun MarkdownText(text: String, running: Boolean) {
     val components = rememberRevealComponents()
     val body: @Composable () -> Unit = {
         CompositionLocalProvider(LocalTextReveal provides reveal) {
-            Markdown(
-                markdownState = markdown,
-                // The renderer's default headings are display-sized, too large for a phone.
-                typography = markdownTypography(
-                    h1 = type.titleLarge,
-                    h2 = type.titleMedium,
-                    h3 = type.titleSmall,
-                    h4 = type.titleSmall,
-                    h5 = type.bodyLarge,
-                    h6 = type.bodyLarge,
+            // The renderer takes its body text from the theme, so the size is set there.
+            MaterialTheme(
+                typography = type.copy(
+                    bodyLarge = type.bodyLarge.copy(fontSize = textSize.sp, lineHeight = (textSize * 1.5f).sp),
                 ),
-                components = components,
-            )
+            ) {
+                Markdown(
+                    markdownState = markdown,
+                    // The renderer's default headings are display-sized, too large for a phone.
+                    typography = markdownTypography(
+                        h1 = type.titleLarge,
+                        h2 = type.titleMedium,
+                        h3 = type.titleSmall,
+                        h4 = type.titleSmall,
+                        h5 = type.bodyLarge,
+                        h6 = type.bodyLarge,
+                    ),
+                    components = components,
+                )
+            }
         }
     }
     SelectionContainer { body() }
@@ -178,31 +302,16 @@ private fun ErrorNote(error: RunError?, actions: ResultActions) {
     }
     Text(message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(onClick = actions.onRetry) { Text(stringResource(R.string.action_try_again)) }
+        PillButton(stringResource(R.string.action_try_again), actions.onRetry, icon = AppIcons.Retry)
         if (error !is RunError.Message) {
-            TextButton(onClick = actions.onOpenSettings) { Text(stringResource(R.string.action_open_settings)) }
+            PillButton(
+                stringResource(R.string.action_open_settings),
+                actions.onOpenSettings,
+                icon = AppIcons.Key,
+                container = MaterialTheme.colorScheme.primaryContainer,
+                content = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
         }
-    }
-}
-
-@Composable
-private fun CopyButton(text: String) {
-    val context = LocalContext.current
-    var copied by remember { mutableStateOf(false) }
-    LaunchedEffect(copied) {
-        if (copied) {
-            delay(COPIED_NOTE_MS)
-            copied = false
-        }
-    }
-    OutlinedButton(
-        onClick = {
-            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            clipboard.setPrimaryClip(ClipData.newPlainText("translation", text))
-            copied = true
-        },
-    ) {
-        Text(stringResource(if (copied) R.string.action_copied else R.string.action_copy))
     }
 }
 
@@ -210,20 +319,19 @@ private fun CopyButton(text: String) {
 private fun BackTranslationPanel(back: BackTranslationState, onStop: () -> Unit) {
     if (back.status == BackStatus.HIDDEN) return
 
-    Spacer(Modifier.width(4.dp))
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, modifier = Modifier.padding(vertical = 4.dp))
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.heightIn(min = 32.dp)) {
+        SectionCaption(
             stringResource(R.string.label_back_translation, languageName(back.languageCode)),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.primary,
+            Modifier.weight(1f),
         )
         if (back.status == BackStatus.RUNNING) {
-            Spacer(Modifier.width(8.dp))
-            TextButton(onClick = onStop) { Text(stringResource(R.string.action_stop)) }
+            PillButton(stringResource(R.string.action_stop), onStop, icon = AppIcons.Stop)
         }
     }
     if (back.text.isNotEmpty()) {
-        MarkdownText(back.text, running = back.status == BackStatus.RUNNING)
+        MarkdownText(back.text, running = back.status == BackStatus.RUNNING, textSize = 15)
     } else if (back.status == BackStatus.RUNNING) {
         PendingNote(stringResource(R.string.back_running), MaterialTheme.colorScheme.primary)
     }

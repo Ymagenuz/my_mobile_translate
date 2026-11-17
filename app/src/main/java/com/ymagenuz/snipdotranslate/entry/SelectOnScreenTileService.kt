@@ -3,6 +3,7 @@ package com.ymagenuz.snipdotranslate.entry
 import android.content.Intent
 import android.os.Build
 import android.service.quicksettings.TileService
+import com.ymagenuz.snipdotranslate.SnipDoApp
 import com.ymagenuz.snipdotranslate.select.overlay.SelectionAccessibilityService
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
@@ -13,12 +14,18 @@ import kotlinx.coroutines.Deferred
  * screen-capture permission, which asks each time.
  */
 class SelectOnScreenTileService : TileService() {
+    override fun onTileAdded() = (application as SnipDoApp).noteTile(selectOnScreen = true, added = true)
+
+    override fun onTileRemoved() = (application as SnipDoApp).noteTile(selectOnScreen = true, added = false)
+
     override fun onStopListening() {
         shadeClosed?.complete(Unit)
         shadeClosed = null
     }
 
     override fun onClick() {
+        // A tile added before the app kept track of it.
+        (application as SnipDoApp).noteTile(selectOnScreen = true, added = true)
         val service = SelectionAccessibilityService.instance
         if (service != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             // The service closes the shade itself and waits for it before capturing.

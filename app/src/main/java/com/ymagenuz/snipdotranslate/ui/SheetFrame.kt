@@ -41,9 +41,14 @@ private val DISMISS_DRAG_DISTANCE = 96.dp
  * screen, so it sits over the image or the app below instead of in a separate dialog. The
  * library's sheet opens a dialog, which the accessibility overlay couldn't host either.
  * Tapping outside or dragging the handle down dismisses it; the host handles Back.
+ * [bottomBar] stays under the content, in reach however far the content scrolls.
  */
 @Composable
-fun SheetFrame(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+fun SheetFrame(
+    onDismiss: () -> Unit,
+    bottomBar: (@Composable () -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit,
+) {
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
     val dismissDistance = with(density) { DISMISS_DRAG_DISTANCE.toPx() }
@@ -61,8 +66,7 @@ fun SheetFrame(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Uni
 
         Surface(
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 1.dp,
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
@@ -89,10 +93,12 @@ fun SheetFrame(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Uni
                     Box(
                         Modifier
                             .size(width = 36.dp, height = 4.dp)
-                            .background(MaterialTheme.colorScheme.outline, RoundedCornerShape(2.dp)),
+                            .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.45f), RoundedCornerShape(2.dp)),
                     )
                 }
-                content()
+                // Gives way to the bar below when the sheet is at its full height.
+                Column(modifier = Modifier.weight(1f, fill = false), content = content)
+                bottomBar?.invoke()
             }
         }
     }

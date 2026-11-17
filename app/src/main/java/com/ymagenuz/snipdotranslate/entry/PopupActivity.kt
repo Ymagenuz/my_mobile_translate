@@ -13,22 +13,21 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.core.content.IntentCompat
 import androidx.lifecycle.AndroidViewModel
@@ -40,12 +39,18 @@ import com.ymagenuz.snipdotranslate.core.incomingText
 import com.ymagenuz.snipdotranslate.data.AppSettings
 import com.ymagenuz.snipdotranslate.domain.RunStatus
 import com.ymagenuz.snipdotranslate.domain.TranslationRequest
+import com.ymagenuz.snipdotranslate.ui.AppIcons
+import com.ymagenuz.snipdotranslate.ui.CaptionAction
 import com.ymagenuz.snipdotranslate.ui.MainActivity
+import com.ymagenuz.snipdotranslate.ui.ResultActionBar
 import com.ymagenuz.snipdotranslate.ui.ResultActions
 import com.ymagenuz.snipdotranslate.ui.ResultPane
 import com.ymagenuz.snipdotranslate.ui.SheetFrame
 import com.ymagenuz.snipdotranslate.ui.SnipDoTheme
+import com.ymagenuz.snipdotranslate.ui.SourceEditor
+import com.ymagenuz.snipdotranslate.ui.SourcePreview
 import com.ymagenuz.snipdotranslate.ui.UiLanguage
+import com.ymagenuz.snipdotranslate.ui.shareText
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -147,54 +152,72 @@ class PopupActivity : ComponentActivity() {
         val state by viewModel.session.state.collectAsStateWithLifecycle()
         val settings by viewModel.settings.collectAsStateWithLifecycle()
         if (state.status == RunStatus.IDLE) return
+        // The source text being corrected before it's translated again.
+        var editing by remember { mutableStateOf(false) }
+        var draft by remember { mutableStateOf(TextFieldValue()) }
+        val actions = ResultActions(
+            onStop = viewModel.session::stop,
+            onRetry = viewModel.session::retry,
+            onStopBack = viewModel.session::stopBackTranslation,
+            onOpenSettings = { openApp { putExtra(MainActivity.EXTRA_OPEN_SETTINGS, true) } },
+            backTranslationOn = settings.backTranslation,
+            onToggleBack = viewModel::setBackTranslation,
+            onShare = { shareText(this, it) },
+        )
 
         BackHandler(onBack = ::finish)
-        SheetFrame(onDismiss = ::finish) {
+        SheetFrame(
+            onDismiss = ::finish,
+            bottomBar = {
+                ResultActionBar(
+                    state = state,
+                    actions = actions,
+                    onOpenInApp = {
+                        val finished = state.status == RunStatus.DONE
+                        openApp {
+                            putExtra(MainActivity.EXTRA_INPUT, state.request?.text)
+                            if (finished) {
+                                putExtra(MainActivity.EXTRA_RESULT, state.text)
+                                putExtra(MainActivity.EXTRA_MODE, state.mode)
+                            }
+                        }
+                    },
+                )
+            },
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .navigationBarsPadding()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(start = 20.dp, end = 12.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        stringResource(R.string.label_original),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                    Spacer(Modifier.weight(1f))
-                    TextButton(
-                        onClick = {
-                            val finished = state.status == RunStatus.DONE
-                            openApp {
-                                putExtra(MainActivity.EXTRA_INPUT, state.request?.text)
-                                if (finished) {
-                                    putExtra(MainActivity.EXTRA_RESULT, state.text)
-                                    putExtra(MainActivity.EXTRA_MODE, state.mode)
-                                }
-                            }
+                val label = stringResource(R.string.label_original)
+                val source = state.request?.text.orEmpty()
+                if (editing) {
+                    SourceEditor(
+                        label = label,
+                        draft = draft,
+                        onDraftChange = { draft = it },
+                        onTranslate = {
+                            editing = false
+                            viewModel.translate(draft.text.trim())
                         },
-                    ) { Text(stringResource(R.string.action_open_in_app)) }
+                        onCancel = { editing = false },
+                    )
+                } else {
+                    SourcePreview(label, source) {
+                        CaptionAction(AppIcons.Edit, stringResource(R.string.action_edit)) {
+                            draft = TextFieldValue(source, TextRange(source.length))
+                            editing = true
+                        }
+                    }
                 }
-                Text(
-                    state.request?.text.orEmpty(),
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodyMedium,
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    modifier = Modifier.padding(top = 4.dp, end = 8.dp),
                 )
-                ResultPane(
-                    state = state,
-                    actions = ResultActions(
-                        onStop = viewModel.session::stop,
-                        onRetry = viewModel.session::retry,
-                        onStopBack = viewModel.session::stopBackTranslation,
-                        onOpenSettings = { openApp { putExtra(MainActivity.EXTRA_OPEN_SETTINGS, true) } },
-                        backTranslationOn = settings.backTranslation,
-                        onToggleBack = viewModel::setBackTranslation,
-                    ),
-                )
+                ResultPane(state = state, actions = actions, showActions = false, modifier = Modifier.padding(end = 8.dp))
             }
         }
     }

@@ -5,41 +5,36 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.ymagenuz.snipdotranslate.R
+import com.ymagenuz.snipdotranslate.ui.AppIcons
+import com.ymagenuz.snipdotranslate.ui.PillButton
 import com.ymagenuz.snipdotranslate.ui.SnipDoTheme
-
-private val COMPACT_BUTTON_PADDING = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
 
 /**
  * The small bar over the live screen while a selection continues: the user scrolls the app
@@ -89,8 +84,8 @@ class ContinueBar(
     private fun Bar() {
         Surface(
             shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
             shadowElevation = 6.dp,
-            tonalElevation = 3.dp,
             // Room for the shadow, since the window is only as big as what's in it.
             modifier = Modifier.padding(8.dp),
         ) {
@@ -98,7 +93,7 @@ class ContinueBar(
             Column(
                 modifier = Modifier
                     .width(IntrinsicSize.Max)
-                    .padding(start = 6.dp, end = 10.dp, top = 10.dp, bottom = 6.dp),
+                    .padding(start = 6.dp, end = 10.dp, top = 12.dp, bottom = 8.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 10.dp)) {
                     Text(
@@ -119,22 +114,23 @@ class ContinueBar(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                 ) {
-                    val discard = stringResource(R.string.continue_discard)
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .semantics { contentDescription = discard }
-                            .clickable(onClick = onDiscard),
-                    ) { Text("✕", fontSize = 18.sp) }
-                    Spacer(Modifier.weight(1f))
-                    OutlinedButton(onClick = onTranslate, contentPadding = COMPACT_BUTTON_PADDING) {
-                        Text(stringResource(R.string.action_translate))
+                    IconButton(onClick = onDiscard) {
+                        Icon(
+                            AppIcons.Trash,
+                            contentDescription = stringResource(R.string.continue_discard),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
-                    Button(onClick = onCapture, contentPadding = COMPACT_BUTTON_PADDING) {
+                    Spacer(Modifier.weight(1f))
+                    PillButton(stringResource(R.string.action_translate), onTranslate, icon = AppIcons.Translate)
+                    Button(
+                        onClick = onCapture,
+                        contentPadding = PaddingValues(start = 14.dp, end = 18.dp),
+                        modifier = Modifier.heightIn(min = 44.dp),
+                    ) {
+                        Icon(AppIcons.Capture, contentDescription = null, modifier = Modifier.padding(end = 8.dp).size(20.dp))
                         Text(stringResource(R.string.action_capture))
                     }
                 }
