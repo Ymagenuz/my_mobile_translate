@@ -57,6 +57,7 @@ Tap **Interpret** in the app. At the bottom there's a button for each speaker, *
 
 - **Tap** a speaker's button and talk; it listens until you tap it again. After a minute without speech it stops by itself.
 - Or **press and hold** it while you talk, and let go when you're done.
+- While the microphone is open, the button shows its level as a moving wave, so you can see you're being heard. With Android's **Remove animations** setting on, the button says **Listening** instead.
 - **+** adds a speaker, up to six (A to F). Tap a speaker's language to change it. While there are more than two speakers, ✕ next to the language removes that speaker.
 
 Each sentence is translated as soon as it's heard, while listening carries on, into the languages of all the other speakers. With **Read aloud** on, the translations are spoken between sentences: listening pauses meanwhile so the phone doesn't hear itself, and someone holding their button is never interrupted. 🔊 reads one again. Pressing another speaker's button stops the reading. The screen stays on while the page is open, and listening stops when you leave it.

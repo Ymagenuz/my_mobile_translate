@@ -22,6 +22,7 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 private const val TAG = "InterpretFixture"
+private const val LEVEL_EVERY_MS = 50L
 
 private val DEFAULT_SCRIPT = listOf(
     "zh=你好，请问去火车站怎么走？",
@@ -98,9 +99,15 @@ private class ScriptedSpeechInput(script: List<String>, private val languages: S
             val text = pieces.take(index + 1).joinToString("").trim()
             handler.postDelayed({
                 heard = text
-                this.listener?.onLevel(Random.nextFloat())
                 this.listener?.onPartial(text)
             }, at)
+        }
+        // A level about as often as a microphone reports one: syllables that rise and fall.
+        for (tick in 1_000L until at + 700 step LEVEL_EVERY_MS) {
+            handler.postDelayed({
+                val syllable = (sin(tick / 90.0) + 1) / 2
+                this.listener?.onLevel((0.15 + 0.6 * syllable + 0.25 * Random.nextFloat()).toFloat())
+            }, tick)
         }
         handler.postDelayed({ end { it.onResult(line) } }, at + 700)
     }

@@ -1,6 +1,7 @@
 package com.ymagenuz.snipdotranslate.ui
 
 import android.Manifest
+import android.animation.ValueAnimator
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -115,6 +116,7 @@ private val ADD_BUTTON_WIDTH = 56.dp
 private val MIN_TALK_BUTTON_WIDTH = 96.dp
 private val TALK_BUTTON_SHAPE = RoundedCornerShape(24.dp)
 private val BUBBLE_MAX_WIDTH = 320.dp
+private val WAVE_HEIGHT = 22.dp
 
 // One colour per speaker letter, readable with white text on top. The first two are the
 // app's own blue and teal.
@@ -754,8 +756,12 @@ private fun TalkButton(letter: Char, unheard: Boolean, listening: Listening?, le
     val name = speakerName(letter)
     val actionLabel = stringResource(if (active) R.string.interpret_stop_talking else R.string.interpret_start_talking)
 
+    // While the microphone is open the button shows its level as a moving wave. With Android's
+    // "Remove animations" there is no wave, and the button swells with the voice instead.
+    val microphoneOpen = listening?.phase == ListenPhase.READY || listening?.phase == ListenPhase.HEARING
+    val waveShown = microphoneOpen && ValueAnimator.areAnimatorsEnabled()
     // Only the active button follows the voice level, so the rest of the page doesn't redraw.
-    val voice = if (active) level.collectAsStateWithLifecycle().value else 0f
+    val voice = if (active && !waveShown) level.collectAsStateWithLifecycle().value else 0f
     val pulse by animateFloatAsState(voice, label = "voice")
 
     Box(
@@ -805,7 +811,10 @@ private fun TalkButton(letter: Char, unheard: Boolean, listening: Listening?, le
                 }
             },
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(horizontal = 8.dp)) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp),
+        ) {
             val ink = if (active) Color.White else speakerAccent(letter)
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Icon(AppIcons.Mic, contentDescription = null, tint = ink, modifier = Modifier.size(20.dp))
@@ -818,14 +827,19 @@ private fun TalkButton(letter: Char, unheard: Boolean, listening: Listening?, le
                 )
             }
             Spacer(Modifier.height(2.dp))
-            Text(
-                hint,
-                style = MaterialTheme.typography.labelSmall,
-                color = if (active) Color.White.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+            if (waveShown) {
+                // Says "listening" by itself; screen readers still get the words, as the button's state.
+                VoiceWave(level, color = Color.White, modifier = Modifier.fillMaxWidth().height(WAVE_HEIGHT))
+            } else {
+                Text(
+                    hint,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (active) Color.White.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }
