@@ -16,6 +16,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,6 +31,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -40,9 +42,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -53,18 +57,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.Insets
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LifecycleRegistry
-import androidx.lifecycle.ViewModelStore
-import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.setViewTreeLifecycleOwner
-import androidx.lifecycle.setViewTreeViewModelStoreOwner
-import androidx.savedstate.SavedStateRegistry
-import androidx.savedstate.SavedStateRegistryController
-import androidx.savedstate.SavedStateRegistryOwner
-import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.ymagenuz.snipdotranslate.R
 import com.ymagenuz.snipdotranslate.SnipDoApp
 import com.ymagenuz.snipdotranslate.data.AppSettings
@@ -75,10 +68,14 @@ import com.ymagenuz.snipdotranslate.ocr.ScanScript
 import com.ymagenuz.snipdotranslate.ocr.VisionResult
 import com.ymagenuz.snipdotranslate.ocr.readImageWithVision
 import com.ymagenuz.snipdotranslate.select.core.AreaRect
+import com.ymagenuz.snipdotranslate.select.core.Collected
+import com.ymagenuz.snipdotranslate.select.core.Junction
 import com.ymagenuz.snipdotranslate.select.core.Pen
+import com.ymagenuz.snipdotranslate.select.core.Quad
 import com.ymagenuz.snipdotranslate.select.core.ScreenWord
 import com.ymagenuz.snipdotranslate.select.core.SelectionModel
 import com.ymagenuz.snipdotranslate.select.core.WordOrder
+import com.ymagenuz.snipdotranslate.select.core.bottom
 import com.ymagenuz.snipdotranslate.select.core.center
 import com.ymagenuz.snipdotranslate.select.core.inReadingOrder
 import com.ymagenuz.snipdotranslate.ui.MainActivity
@@ -104,8 +101,32 @@ private const val BLACK_LEVEL = 8
 private const val BLACK_SHARE = 0.98f
 private const val AREA_PADDING_PX = 8
 
+// A selection ending in this share of the screen's height may go on below it.
+private const val CONTINUE_ZONE = 0.25f
+
+// The space the pill at the bottom edge takes, with the navigation bar under it.
+private val PILL_ZONE_HEIGHT = 120.dp
+private val PILL_HALF_WIDTH = 110.dp
+
 /** Where the image came from: the screen just captured, or a photo or screenshot file. */
 enum class ImageSource { SCREEN, PHOTO }
+
+/**
+ * What a selection hands on when it continues on the next screen: the words so far, and the
+ * pen, order and scan language it was using, so the next screen carries on the same way.
+ * [marks] are where this screen's kept words are, to keep them marked over the live app.
+ * [keptOnScreen] are where the app's scrolling took them by the time the next screen was
+ * captured, when it could be followed.
+ */
+data class Continuation(
+    val collected: Collected,
+    val pen: Pen,
+    val order: WordOrder,
+    val script: ScanScript,
+    val toolbarCollapsed: Boolean,
+    val marks: List<Quad> = emptyList(),
+    val keptOnScreen: List<Quad> = emptyList(),
+)
 
 /**
  * A still image with the pens and result sheet. [attach] and [detach] put it wherever it
@@ -113,7 +134,9 @@ enum class ImageSource { SCREEN, PHOTO }
  * true in the accessibility service's overlay, which handles Back itself, and where Android
  * would hide toasts and can't open its text toolbar, so both are drawn inside it instead.
  * [barInsets] are the parts of a screenshot under the status and navigation bars; words there,
- * such as the clock, are left out of the scan.
+ * such as the clock, are left out of the scan. With [onContinue], a selection that reaches the
+ * bottom can keep its words while the user scrolls to the rest; the next screen's selection
+ * then gets them as [continuation] and picks up where they end.
  */
 class SelectionOverlay(
     private val context: Context,
@@ -125,16 +148,13 @@ class SelectionOverlay(
     private val onClosed: () -> Unit,
     private val inOverlayWindow: Boolean = false,
     private val barInsets: Insets = Insets.NONE,
-) : LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner {
+    private val continuation: Continuation? = null,
+    private val onContinue: ((Continuation) -> Unit)? = null,
+) {
     private val app = context.applicationContext as SnipDoApp
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val density = context.resources.displayMetrics.density
-
-    private val lifecycleRegistry = LifecycleRegistry(this)
-    private val savedStateController = SavedStateRegistryController.create(this)
-    override val lifecycle: Lifecycle get() = lifecycleRegistry
-    override val viewModelStore = ViewModelStore()
-    override val savedStateRegistry: SavedStateRegistry get() = savedStateController.savedStateRegistry
+    private val owner = ComposeWindowOwner()
 
     private val toolbar = ToolbarState()
     private val canvas = SelectionCanvasView(context, image)
@@ -142,6 +162,10 @@ class SelectionOverlay(
     private val settings = app.settingsStore.settings.stateIn(scope, SharingStarted.Eagerly, AppSettings())
 
     private var model: SelectionModel? = null
+    // Words taken from earlier screens, and where this screen picks up after them.
+    private val collected = continuation?.collected ?: Collected.EMPTY
+    private var junction = Junction.NONE
+    private var canContinue by mutableStateOf(false)
     private var scanJob: Job? = null
     private var sheetVisible by mutableStateOf(false)
     private var readingImage by mutableStateOf(false)
@@ -167,11 +191,7 @@ class SelectionOverlay(
     }
 
     fun show() {
-        savedStateController.performRestore(null)
-        lifecycleRegistry.currentState = Lifecycle.State.RESUMED
-        root.setViewTreeLifecycleOwner(this)
-        root.setViewTreeViewModelStoreOwner(this)
-        root.setViewTreeSavedStateRegistryOwner(this)
+        owner.attachTo(root)
 
         canvas.onStrokeActive = { toolbar.strokeActive = it }
         canvas.onSelectionChanged = ::syncToolbar
@@ -195,15 +215,21 @@ class SelectionOverlay(
             toolbar.y = saved.toolbarY
             applyBrush()
         }
-        startScan(toolbar.script)
+        continuation?.let {
+            toolbar.pen = it.pen
+            canvas.pen = it.pen
+            toolbar.order = it.order
+            toolbar.collapsed = it.toolbarCollapsed
+        }
+        syncToolbar()
+        startScan(continuation?.script ?: toolbar.script)
     }
 
     fun close() {
         if (closed) return
         closed = true
         scope.cancel()
-        lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
-        viewModelStore.clear()
+        owner.destroy()
         detach(root)
         // The screenshot exists only in memory and is freed once nothing refers to it.
         // Recycling it here would crash a frame or scan that is still using it.
@@ -233,12 +259,28 @@ class SelectionOverlay(
             if (source == ImageSource.SCREEN && contentWords.isEmpty() && withContext(Dispatchers.Default) { isBlackedOut(image) }) {
                 // A toast, which shows once the selection has closed, even over the overlay window.
                 Toast.makeText(context, R.string.selection_blocked, Toast.LENGTH_LONG).show()
+                // Words kept from earlier screens wait in the bar for a screen that can be captured.
+                // The marks belong to a screen that has gone.
+                continuation?.let { onContinue?.invoke(it.copy(marks = emptyList())) }
                 close()
                 return@launch
             }
             toolbar.scanning = false
-            model = SelectionModel(words, TAP_TOLERANCE_DP * density, DRAG_SLOP_DP * density).also(canvas::setModel)
-            if (words.isEmpty()) tell(R.string.selection_no_text, long = true)
+            junction = collected.junctionWith(words, continuation?.keptOnScreen.orEmpty())
+            val scanned = SelectionModel(
+                words,
+                TAP_TOLERANCE_DP * density,
+                DRAG_SLOP_DP * density,
+                locked = junction.carried,
+                initial = junction.replacement,
+            )
+            // Set first, since applying strokes drawn during the scan updates the toolbar from it.
+            model = scanned
+            canvas.setModel(scanned)
+            when {
+                words.isEmpty() -> tell(R.string.selection_no_text, long = true)
+                !collected.isEmpty && !junction.found -> tell(R.string.continue_not_found, long = true)
+            }
         }
     }
 
@@ -263,6 +305,18 @@ class SelectionOverlay(
         toolbar.canUndo = current?.canUndo == true
         toolbar.canRedo = current?.canRedo == true
         toolbar.hasSelection = current?.hasSelection == true
+        toolbar.hasText = toolbar.hasSelection || !collected.isEmpty
+        // Also offered with nothing new selected yet, to scroll further before capturing again.
+        canContinue = onContinue != null && (reachesBottom(current) || (!collected.isEmpty && !toolbar.hasSelection))
+    }
+
+    /** Whether the selection runs into the bottom of the screen, where the text may go on. */
+    private fun reachesBottom(current: SelectionModel?): Boolean {
+        if (current == null || !current.hasSelection) return false
+        val top = barInsets.top.toFloat()
+        val bottom = (image.height - barInsets.bottom).toFloat()
+        val lowest = current.selectedIds.maxOf { current.words[it].quad.bottom }
+        return lowest >= bottom - (bottom - top) * CONTINUE_ZONE
     }
 
     private fun applyBrush() {
@@ -297,7 +351,20 @@ class SelectionOverlay(
         }
     }
 
-    private fun selectedText(): String = model?.selectedText(toolbar.order).orEmpty()
+    /** Everything selected so far: the earlier screens' words, then this screen's. */
+    private fun collectedSoFar(): Collected =
+        collected.plus(model?.selectedWords(toolbar.order).orEmpty(), junction, (image.height - barInsets.bottom).toFloat())
+
+    private fun selectedText(): String = collectedSoFar().text
+
+    /** Keeps what's selected and leaves the frozen screen, so the user can scroll to the rest. */
+    private fun continueBelow() {
+        val handOn = onContinue ?: return
+        // Everything kept on this screen, including what was taken from the one before.
+        val marks = model?.let { kept -> (kept.locked + kept.selectedIds).map { kept.words[it].quad } }.orEmpty()
+        handOn(Continuation(collectedSoFar(), toolbar.pen, toolbar.order, toolbar.script, toolbar.collapsed, marks))
+        close()
+    }
 
     private fun copySelection() {
         val text = selectedText()
@@ -402,7 +469,8 @@ class SelectionOverlay(
             when (result) {
                 is VisionResult.Text -> {
                     fromImage = true
-                    translate(result.text)
+                    // Follows the words taken from earlier screens, as selected words would.
+                    translate(if (collected.isEmpty) result.text else collected.text + "\n\n" + result.text)
                 }
                 VisionResult.NoKey -> session.showFailure(context.getString(R.string.error_no_key))
                 VisionResult.NoModel -> session.showFailure(context.getString(R.string.error_no_model))
@@ -435,7 +503,12 @@ class SelectionOverlay(
         SnipDoTheme {
             val screen: @Composable () -> Unit = {
                 Box(Modifier.fillMaxSize()) {
-                    if (sheetVisible) ResultSheet() else Toolbar()
+                    if (sheetVisible) {
+                        ResultSheet()
+                    } else {
+                        ContinuePill()
+                        Toolbar()
+                    }
                     notice?.let { NoticeBubble(it) }
                 }
             }
@@ -464,6 +537,58 @@ class SelectionOverlay(
                 // Read out by screen readers, as a toast would be.
                 .semantics { liveRegion = LiveRegionMode.Polite },
         )
+    }
+
+    /**
+     * At the bottom edge: which screen this is, once a selection has continued, and Continue
+     * when the selection reaches the bottom. Just above the toolbar when that sits along the
+     * bottom, where it would cover the pill.
+     */
+    @Composable
+    private fun ContinuePill() {
+        val part = if (collected.isEmpty) null else collected.parts + 1
+        if (part == null && !canContinue) return
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val density = LocalDensity.current
+            val areaWidth = constraints.maxWidth.toFloat()
+            val areaHeight = constraints.maxHeight.toFloat()
+            // Where the toolbar is drawn, kept on screen as it keeps itself.
+            val toolbarLeft = toolbar.x.coerceIn(0f, (areaWidth - toolbar.width).coerceAtLeast(0f))
+            val toolbarTop = toolbar.y.coerceIn(0f, (areaHeight - toolbar.height).coerceAtLeast(0f))
+            val halfPill = with(density) { PILL_HALF_WIDTH.toPx() }
+            val coversPill = toolbar.height > 0f &&
+                toolbarTop + toolbar.height > areaHeight - with(density) { PILL_ZONE_HEIGHT.toPx() } &&
+                toolbarLeft < areaWidth / 2f + halfPill && toolbarLeft + toolbar.width > areaWidth / 2f - halfPill
+            val placement = if (coversPill) {
+                Modifier.padding(bottom = with(density) { (areaHeight - toolbarTop).toDp() } + 8.dp)
+            } else {
+                Modifier.navigationBarsPadding().padding(bottom = 16.dp)
+            }
+            Pill(part, Modifier.align(Alignment.BottomCenter).then(placement))
+        }
+    }
+
+    @Composable
+    private fun Pill(part: Int?, modifier: Modifier) {
+        Surface(
+            shape = RoundedCornerShape(50),
+            shadowElevation = 4.dp,
+            tonalElevation = 3.dp,
+            modifier = modifier.alpha(if (toolbar.strokeActive) 0.2f else 1f),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 6.dp)) {
+                part?.let {
+                    Text(
+                        stringResource(R.string.continue_part, it),
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp),
+                    )
+                }
+                if (canContinue) {
+                    TextButton(onClick = ::continueBelow) { Text(stringResource(R.string.continue_below)) }
+                }
+            }
+        }
     }
 
     @Composable

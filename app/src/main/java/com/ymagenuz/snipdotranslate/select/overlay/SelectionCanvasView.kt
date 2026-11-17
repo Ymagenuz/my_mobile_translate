@@ -12,6 +12,7 @@ import android.view.View
 import com.ymagenuz.snipdotranslate.select.core.AreaRect
 import com.ymagenuz.snipdotranslate.select.core.Pen
 import com.ymagenuz.snipdotranslate.select.core.Pt
+import com.ymagenuz.snipdotranslate.select.core.Quad
 import com.ymagenuz.snipdotranslate.select.core.SelectionModel
 import kotlin.math.hypot
 import kotlin.math.max
@@ -20,6 +21,14 @@ private const val MAX_ZOOM = 5f
 private const val LOUPE_ZOOM = 1.8f
 private const val LOUPE_RADIUS_DP = 60f
 private const val LOUPE_OFFSET_DP = 120f
+
+internal val SELECTED_COLOR = Color.argb(96, 47, 111, 237)
+
+/**
+ * Words already kept for a selection that continues: marked over the live app while the user
+ * scrolls, and on the next screen, where they can't be selected again.
+ */
+internal val KEPT_COLOR = Color.argb(80, 52, 168, 83)
 
 /**
  * Shows a frozen image and turns touches into pen strokes. Nothing is drawn over the
@@ -38,7 +47,8 @@ class SelectionCanvasView(context: Context, private val image: Bitmap) : View(co
     private var fitScale = 1f
     private val point = FloatArray(2)
 
-    private val highlight = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(96, 47, 111, 237) }
+    private val highlight = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = SELECTED_COLOR }
+    private val kept = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = KEPT_COLOR }
     private val trail = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
         strokeCap = Paint.Cap.ROUND
@@ -240,15 +250,9 @@ class SelectionCanvasView(context: Context, private val image: Bitmap) : View(co
 
     private fun drawMarks(canvas: Canvas) {
         model?.let { current ->
-            current.selectedIds.forEach { id ->
-                val corners = current.words[id].quad.corners
-                val path = Path().apply {
-                    moveTo(corners[0].x, corners[0].y)
-                    corners.drop(1).forEach { lineTo(it.x, it.y) }
-                    close()
-                }
-                canvas.drawPath(path, highlight)
-            }
+            // Text already taken from the previous screen, so it isn't selected twice.
+            current.locked.forEach { id -> canvas.drawPath(current.words[id].quad.toPath(), kept) }
+            current.selectedIds.forEach { id -> canvas.drawPath(current.words[id].quad.toPath(), highlight) }
         }
         if (!strokeActive) return
 
@@ -299,4 +303,12 @@ class SelectionCanvasView(context: Context, private val image: Bitmap) : View(co
         canvas.restore()
         canvas.drawCircle(centerX, centerY, radius, loupeBorder)
     }
+}
+
+internal fun Quad.toPath(): Path = Path().apply {
+    moveTo(topLeft.x, topLeft.y)
+    lineTo(topRight.x, topRight.y)
+    lineTo(bottomRight.x, bottomRight.y)
+    lineTo(bottomLeft.x, bottomLeft.y)
+    close()
 }

@@ -16,13 +16,17 @@ private const val MIN_AREA_SIDE = 16f
  * The words selected on a scanned screen. [words] must be in reading order, with
  * each word's id equal to its position. [tapTolerance] is how far from a word a
  * tap still counts, and [dragSlop] how far a finger moves before a tap is a drag.
+ * [locked] words can't be selected, such as text already taken from the previous
+ * screen, and [initial] words start out selected.
  */
 class SelectionModel(
     val words: List<ScreenWord>,
     private val tapTolerance: Float,
     private val dragSlop: Float,
+    val locked: Set<Int> = emptySet(),
+    initial: Set<Int> = emptySet(),
 ) {
-    private var selected = LinkedHashSet<Int>()
+    private var selected = LinkedHashSet(initial - locked)
     private val undoStack = ArrayDeque<LinkedHashSet<Int>>()
     private val redoStack = ArrayDeque<LinkedHashSet<Int>>()
 
@@ -92,7 +96,7 @@ class SelectionModel(
         selected = base
     }
 
-    fun selectAll() = replaceSelection(LinkedHashSet(words.map { it.id }))
+    fun selectAll() = replaceSelection(LinkedHashSet(words.map { it.id } - locked))
 
     fun clear() = replaceSelection(LinkedHashSet())
 
@@ -108,10 +112,12 @@ class SelectionModel(
         selected = next
     }
 
-    fun selectedText(order: WordOrder): String {
+    fun selectedWords(order: WordOrder): List<ScreenWord> {
         val ids = if (order == WordOrder.READING) selected.sorted() else selected.toList()
-        return assembleText(ids.map { words[it] })
+        return ids.map { words[it] }
     }
+
+    fun selectedText(order: WordOrder): String = assembleText(selectedWords(order))
 
     private fun replaceSelection(updated: LinkedHashSet<Int>) {
         if (updated == selected) return
@@ -124,14 +130,17 @@ class SelectionModel(
         if (words.isEmpty()) return
         val from = anchor ?: nearestWord(start).also { anchor = it }
         val current = nearestWord(to)
-        selected = LinkedHashSet(base).apply { addAll(minOf(from, current)..max(from, current)) }
+        selected = LinkedHashSet(base).apply {
+            addAll(minOf(from, current)..max(from, current))
+            removeAll(locked)
+        }
     }
 
     private fun applyBrush(from: Pt, to: Pt) {
         val touched = words.filter { it.quad.distanceToStroke(from, to) <= radius }
             .sortedBy { distance(from, it.quad.center) }
         if (pen == Pen.PLUS) {
-            touched.forEach { selected.add(it.id) }
+            touched.forEach { if (it.id !in locked) selected.add(it.id) }
         } else {
             touched.forEach { selected.remove(it.id) }
         }
@@ -148,19 +157,20 @@ class SelectionModel(
     }.id
 
     private fun toggleWordAt(point: Pt) {
-        val word = wordAt(point) ?: return
+        val word = wordAt(point)?.takeIf { it.id !in locked } ?: return
         if (!selected.remove(word.id)) selected.add(word.id)
     }
 
     private fun toggleBlockAt(point: Pt) {
         val hit = wordAt(point) ?: return
-        val block = words.filter { it.blockId == hit.blockId }.map { it.id }
+        val block = words.filter { it.blockId == hit.blockId && it.id !in locked }.map { it.id }
+        if (block.isEmpty()) return
         if (selected.containsAll(block)) selected.removeAll(block.toSet()) else selected.addAll(block)
     }
 
     private fun addEnclosedWords() {
         if (stroke.size < 3) return
-        words.filter { polygonContains(stroke, it.quad.center) }.forEach { selected.add(it.id) }
+        words.filter { it.id !in locked && polygonContains(stroke, it.quad.center) }.forEach { selected.add(it.id) }
     }
 
     private fun areaOf(a: Pt, b: Pt): AreaRect? {

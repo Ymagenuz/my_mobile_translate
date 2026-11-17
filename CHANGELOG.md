@@ -2,6 +2,10 @@
 
 **English** | [简体中文](CHANGELOG.zh-CN.md)
 
+## Unreleased
+
+- With the accessibility service, a selection can carry on past the bottom of the screen. When your selection reaches the bottom, **Continue ↓** keeps the words and leaves the frozen screen with a small bar. What you kept stays marked on the live app in a colour of its own and moves with the text in apps that report their scrolling. Scroll the app, then tap **Capture** in the bar, the tile or the shortcut. The lines you already have keep that colour on the new screen and can't be selected twice, even where the scan doesn't find their text again, and a line the edge cut off is replaced by its whole version. **Translate**, **Edit** and **Copy** use every part as one text. Only the words are kept between screens.
+
 ## 0.3.0 — 2026-11-10
 
 - The accessibility service from 0.1 is back as an option for screen selection, on Android 12 and later. Turn on **SnipDo screen selection** in Accessibility settings and the tile captures straight away without Android asking, and the feature's floating button or gesture starts a selection from any screen. Whenever it isn't running, including after a phone turns it off, the tile asks for screen-capture permission as in 0.2. **Settings → Screen selection** shows whether it's on and links to its setup.

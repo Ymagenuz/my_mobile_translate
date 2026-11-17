@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name" translatable="false">SnipDo Translate</string>
     <string name="selection_service_label">SnipDo screen selection</string>
-    <string name="selection_service_description">Lets you select words anywhere on your screen to translate them, without Android asking each time. It only takes a screenshot when you tap the Select on screen tile or this feature\'s shortcut. It can\'t read the content of other apps, and screenshots stay in memory on your phone.</string>
+    <string name="selection_service_description">Lets you select words anywhere on your screen to translate them, without Android asking each time. It only takes a screenshot when you tap the Select on screen tile, this feature\'s shortcut or its Capture button. While you continue a selection, it notices how far apps scroll, to keep the selection marked. It can\'t read the content of other apps, and screenshots stay in memory on your phone.</string>
     <string name="tile_select_on_screen">Select on screen</string>
     <string name="tile_translate_clipboard">Translate clipboard</string>
     <string name="action_open_in_app">Open in app</string>
@@ -36,6 +36,16 @@
     <string name="selection_blocked">This app doesn\'t allow its screen to be captured.</string>
     <string name="selection_no_text">No text found. Try the area pen for anything the scan can\'t read.</string>
     <string name="selection_reading_image">Reading the selected area…</string>
+    <string name="continue_below">Continue ↓</string>
+    <string name="continue_part">Part %1$d</string>
+    <plurals name="continue_parts_kept">
+        <item quantity="one">%d part kept</item>
+        <item quantity="other">%d parts kept</item>
+    </plurals>
+    <string name="continue_bar_hint">Scroll, then tap Capture</string>
+    <string name="continue_discard">Discard the kept parts</string>
+    <string name="continue_not_found">Couldn\'t find where the last part ended on this screen.</string>
+    <string name="action_capture">Capture</string>
     <string name="error_ocr_unsupported">%1$s doesn\'t support image OCR</string>
     <string name="error_no_text_found">No text was found in the image.</string>
     <string name="label_original">ORIGINAL</string>
@@ -108,7 +118,7 @@
     <string name="settings_selection_accessibility_on">On. The tile captures without asking. If you also turned on the SnipDo screen selection shortcut in Accessibility settings, its floating button or gesture starts a selection from any screen.</string>
     <string name="settings_selection_accessibility_off">Off. Turn on SnipDo screen selection in Accessibility settings and the tile captures without asking. You can also turn on its shortcut there: a floating button or gesture that starts a selection from any screen. Whenever the service is off, the tile asks as above.</string>
     <string name="settings_selection_accessibility_restricted">If Android says it\'s a restricted setting, open App info, tap the ⋮ menu, choose Allow restricted settings, and try again. Some phones, such as Xiaomi, turn the service off when SnipDo is cleared from recent apps; the tile then asks each time until you turn it back on.</string>
-    <string name="settings_selection_accessibility_privacy">The service can only take a screenshot, only when you tap the tile or its shortcut, and can\'t read other apps\' content.</string>
+    <string name="settings_selection_accessibility_privacy">The service can only take a screenshot, only when you tap the tile, its shortcut or Capture, and can\'t read other apps\' content. While you continue a selection, it notices how far the app scrolls, to keep the selection marked.</string>
     <string name="settings_open_accessibility">Accessibility settings</string>
     <string name="settings_open_app_info">App info</string>
     <string name="capture_channel">Screen capture</string>

@@ -64,6 +64,8 @@ class ToolbarState {
     var canUndo by mutableStateOf(false)
     var canRedo by mutableStateOf(false)
     var hasSelection by mutableStateOf(false)
+    // Something to translate: a selection here, or words kept from earlier screens.
+    var hasText by mutableStateOf(false)
     var order by mutableStateOf(WordOrder.READING)
     var script by mutableStateOf(ScanScript.CHINESE)
     var plusDp by mutableFloatStateOf(16f)
@@ -72,6 +74,9 @@ class ToolbarState {
     var showWidth by mutableStateOf(false)
     var x by mutableFloatStateOf(-1f)
     var y by mutableFloatStateOf(-1f)
+    // Its size on screen, so other controls can keep clear of it.
+    var width by mutableFloatStateOf(0f)
+    var height by mutableFloatStateOf(0f)
 }
 
 data class ToolbarActions(
@@ -121,6 +126,8 @@ fun FloatingToolbar(state: ToolbarState, actions: ToolbarActions) {
                 .onSizeChanged {
                     boxWidth = it.width.toFloat()
                     boxHeight = it.height.toFloat()
+                    state.width = boxWidth
+                    state.height = boxHeight
                 },
         ) {
             val dragModifier = Modifier.pointerInput(areaWidth, areaHeight) {
@@ -203,14 +210,14 @@ private fun Expanded(state: ToolbarState, actions: ToolbarActions, dragModifier:
         ) {
             // A handle in each bottom corner, so either hand can move the toolbar.
             Tool("⠿", stringResource(R.string.tool_move), modifier = dragModifier) { }
-            Button(onClick = actions.onTranslate, enabled = state.hasSelection, contentPadding = COMPACT_BUTTON_PADDING) {
+            Button(onClick = actions.onTranslate, enabled = state.hasText, contentPadding = COMPACT_BUTTON_PADDING) {
                 Text(stringResource(R.string.action_translate))
             }
             // Corrects what the scan misread before anything is sent.
-            OutlinedButton(onClick = actions.onEdit, enabled = state.hasSelection, contentPadding = COMPACT_BUTTON_PADDING) {
+            OutlinedButton(onClick = actions.onEdit, enabled = state.hasText, contentPadding = COMPACT_BUTTON_PADDING) {
                 Text(stringResource(R.string.action_edit))
             }
-            OutlinedButton(onClick = actions.onCopy, enabled = state.hasSelection, contentPadding = COMPACT_BUTTON_PADDING) {
+            OutlinedButton(onClick = actions.onCopy, enabled = state.hasText, contentPadding = COMPACT_BUTTON_PADDING) {
                 Text(stringResource(R.string.action_copy))
             }
             if (state.scanning) ScanRing()
