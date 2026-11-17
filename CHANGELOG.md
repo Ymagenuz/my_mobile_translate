@@ -2,7 +2,7 @@
 
 **English** | [简体中文](CHANGELOG.zh-CN.md)
 
-## Unreleased
+## 0.4.0 — 2026-11-16
 
 - With the accessibility service, a selection can carry on past the bottom of the screen. When your selection reaches the bottom, **Continue ↓** keeps the words and leaves the frozen screen with a small bar. What you kept stays marked on the live app in a colour of its own and moves with the text in apps that report their scrolling. Scroll the app, then tap **Capture** in the bar, the tile or the shortcut. The lines you already have keep that colour on the new screen and can't be selected twice, even where the scan doesn't find their text again, and a line the edge cut off is replaced by its whole version. **Translate**, **Edit** and **Copy** use every part as one text. Only the words are kept between screens.
 

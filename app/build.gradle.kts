@@ -20,8 +20,8 @@ android {
         applicationId = "com.ymagenuz.snipdotranslate"
         minSdk = 26
         targetSdk = 37
-        versionCode = 4
-        versionName = "0.3.0"
+        versionCode = 5
+        versionName = "0.4.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // ML Kit models are about 4 MB per script per architecture.
