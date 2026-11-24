@@ -44,6 +44,7 @@ import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownTypography
 import com.mikepenz.markdown.model.rememberMarkdownState
 import com.ymagenuz.snipdotranslate.R
+import com.ymagenuz.snipdotranslate.core.CjkFriendlyFlavour
 import com.ymagenuz.snipdotranslate.core.SOURCE_LANGUAGES
 import com.ymagenuz.snipdotranslate.core.TARGET_DEFAULT
 import com.ymagenuz.snipdotranslate.core.TARGET_LANGUAGES
@@ -262,8 +263,9 @@ private fun MarkdownText(text: String, running: Boolean, textSize: Int) {
     if (running) streamed.value = true
     // Off with Android's "Remove animations", as the desktop follows Windows' setting.
     val reveal = streamed.value && ValueAnimator.areAnimatorsEnabled()
-    // Keeps showing the previous text while the next is parsed, instead of a blank frame.
-    val markdown = rememberMarkdownState(text, retainState = true)
+    // Keeps showing the previous text while the next is parsed, instead of a blank frame. The flavour shows bold beside
+    // Chinese punctuation, as in **注意：**请勿关闭, which GitHub's own rules leave as asterisks.
+    val markdown = rememberMarkdownState(text, retainState = true, flavour = CjkFriendlyFlavour)
     val components = rememberRevealComponents()
     val body: @Composable () -> Unit = {
         CompositionLocalProvider(LocalTextReveal provides reveal) {
