@@ -2,6 +2,11 @@
 
 **English** | [简体中文](CHANGELOG.zh-CN.md)
 
+## 0.5.1 — 2026-11-23
+
+- Bold right next to Chinese punctuation, as in `**注意：**请勿关闭` or `这是**“引号”**文字`, now shows as bold in a result, its back-translation and History, where the asterisks showed before. The same goes for italic and strikethrough, and for Japanese and Korean.
+- One of those marks could pair with the next bold in the line and make the words in between bold instead. Each bold now covers just its own words.
+
 ## 0.5.0 — 2026-11-17
 
 - **Interpret**: a new page for a conversation between people who speak different languages. Each speaker has a button at the bottom, with their language above it: tap it to talk until you tap it again, or press and hold it while you talk. **+** adds speakers, up to six. While a speaker's microphone is open, their button shows its level as a moving wave. Every sentence is translated into the other speakers' languages as soon as it's heard, while listening carries on, and with **Read aloud** on the translations are spoken between sentences. The conversation shows as bubbles, the first speaker's on the left and the second's on the right. It uses the phone's speech recognition and text-to-speech, and your API key for the translation. A language the phone's speech recognition can't hear, such as anything but Chinese and English with Xiaomi's engine, is marked: its speaker can't talk but still gets translations. If your model accepts audio, turn on **Supports audio input** in **Settings → Translation service** and the model hears those languages instead: SnipDo records them, splits them into sentences at pauses, and has the model write each one down.
